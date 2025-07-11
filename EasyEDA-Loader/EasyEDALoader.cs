@@ -75,6 +75,7 @@ namespace EasyEDA_Loader
                 return;
             }
 
+            var owner_id = root.Result.Component.Owner.Uuid;
             var ee_footprint = root.Result.Component.PackageDetail.Footprint;
             var ee_symbol = root.Result.Component.Symbol;
             string package = ee_footprint.Head.Parameters.Package;
@@ -84,7 +85,7 @@ namespace EasyEDA_Loader
             Task<byte[]> modelTask = model != null ? Task.Run(() => api.LoadModelAsync(model.Uuid, ctx.Token)) : null;
             Task<byte[]> rawModelTask = model != null ? Task.Run(() => api.LoadRawModelAsync(model.Uuid, ctx.Token)) : null;
 
-            Task<EasyedaApi.ProductInfo> productInfo = Task.Run(() => api.GetProductInfoAsync(dialog.Component));
+            Task<EasyedaApi.ProductInfo> productInfo = Task.Run(() => api.GetProductInfoAsync(dialog.Component, owner_id));
 
             string documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
 

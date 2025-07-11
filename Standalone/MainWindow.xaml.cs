@@ -114,11 +114,12 @@ namespace Standalone
 
             FootprintCanvas.Children.Clear();
 
-            var productTask = Task.Run(() => Api.GetProductInfoAsync(partName));
-            productTask.Wait();
-
             DocumentTask = Task.Run(() => Api.GetComponentJsonAsync(partName, cts.Token));
             DocumentTask.Wait();
+
+            var productInfoTask = Task.Run(() => Api.GetProductInfoAsync(partName, DocumentTask.Result.Component.Owner.Uuid));
+            productInfoTask.Wait();
+
             Component = DocumentTask.Result.Component;
 
             SymbolDrawing.DrawComponent(SymbolCanvas, Component.Symbol.Shapes);

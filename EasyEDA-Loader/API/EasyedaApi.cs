@@ -137,8 +137,77 @@ namespace EasyEDA_Loader
             public Vec3 Offset { get; set; }
             public Dictionary<string, string> Parameters { get; set; }
         }
+        public async Task<ProductInfo> GetProductInfoAsync(string search, string uuid)
+        {
+            string url = $"https://pro.easyeda.com/api/v2/devices/search";
+            var formData = new Dictionary<string, string>
+            {
+                { "page", "1" },
+                { "pageSize", "1" },
+                { "uid", uuid },
+                { "path", uuid },
+                { "wd", search.ToLower() },
+                { "returnListStyle", "classifyarr" }
+            };
+            var content = new FormUrlEncodedContent(formData);
 
-        public async Task<ProductInfo> GetProductInfoAsync(string lcscId)
+            try
+            {
+                var response = await HttpClient.PostAsync(url, content);
+                response.EnsureSuccessStatusCode(); // Throw if not 200 OK
+                string result = await response.Content.ReadAsStringAsync();
+                JObject obj = JObject.Parse(result);
+                JObject obj_info = (JObject)obj["result"]["lists"]["lcsc"][0];
+                var attributes = obj_info["attributes"].ToObject<Dictionary<string, string>>();
+                return ProductFromAttributes(attributes, obj_info["description"].ToString());
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        static public ProductInfo ProductFromAttributes(Dictionary<string, string> attributes, string description)
+        {
+            var transformInfo = attributes["3D Model Transform"].Split(',');
+            List<string> keysToRemove = new()
+            {
+                "Add into BOM",
+                "Convert to PCB",
+                "Symbol",
+                "Designator",
+                "Footprint",
+                "3D Model",
+                "3D Model Title",
+                "3D Model Transform",
+                "Name"
+            };
+            return new ProductInfo
+            {
+                Description = description,
+                Size = new Vec3
+                {
+                    X = EeShape.ConvertToMM(double.Parse(transformInfo[0])) / 10,
+                    Y = EeShape.ConvertToMM(double.Parse(transformInfo[1])) / 10,
+                    Z = EeShape.ConvertToMM(double.Parse(transformInfo[2])) / 10,
+                },
+                Rotation = new Vec3
+                {
+                    X = double.Parse(transformInfo[3]),
+                    Y = double.Parse(transformInfo[4]),
+                    Z = double.Parse(transformInfo[5]),
+                },
+                Offset = new Vec3
+                {
+                    X = EeShape.ConvertToMM(double.Parse(transformInfo[6])) / 10,
+                    Y = EeShape.ConvertToMM(double.Parse(transformInfo[7])) / 10,
+                    Z = EeShape.ConvertToMM(double.Parse(transformInfo[8])) / 10,
+                },
+                Parameters = attributes.Where(kvp => !keysToRemove.Contains(kvp.Key) && kvp.Value != "-").ToDictionary(kvp => kvp.Key, kvp => kvp.Value)
+            };
+        }
+
+        public async Task<List<ProductInfo>> SearchProductInfoAsync(string lcscId)
         {
             string url = $"https://pro.easyeda.com/api/v2/eda/product/search";
 
@@ -154,44 +223,15 @@ namespace EasyEDA_Loader
                 response.EnsureSuccessStatusCode(); // Throw if not 200 OK
                 string result = await response.Content.ReadAsStringAsync();
                 JObject obj = JObject.Parse(result);
-                JObject device_info = (JObject)obj["result"]["productList"][0]["device_info"];
-                var attributes = device_info["attributes"].ToObject<Dictionary<string, string>>();
-                var transformInfo = attributes["3D Model Transform"].Split(',');
-                List<string> keysToRemove = new()
+                JArray products = (JArray)obj["result"]["productList"];
+                List<ProductInfo> productList = new();
+                foreach(var product in products)
                 {
-                    "Add into BOM",
-                    "Convert to PCB",
-                    "Symbol",
-                    "Designator",
-                    "Footprint",
-                    "3D Model",
-                    "3D Model Title",
-                    "3D Model Transform",
-                    "Name"
-                };
-                return new ProductInfo
-                {
-                    Description = device_info["Description"].ToString(),
-                    Size = new Vec3
-                    {
-                        X = EeShape.ConvertToMM(double.Parse(transformInfo[0])) / 10,
-                        Y = EeShape.ConvertToMM(double.Parse(transformInfo[1])) / 10,
-                        Z = EeShape.ConvertToMM(double.Parse(transformInfo[2])) / 10,
-                    },
-                    Rotation = new Vec3
-                    {
-                        X = double.Parse(transformInfo[3]),
-                        Y = double.Parse(transformInfo[4]),
-                        Z = double.Parse(transformInfo[5]),
-                    },
-                    Offset = new Vec3
-                    {
-                        X = EeShape.ConvertToMM(double.Parse(transformInfo[6])) / 10,
-                        Y = EeShape.ConvertToMM(double.Parse(transformInfo[7])) / 10,
-                        Z = EeShape.ConvertToMM(double.Parse(transformInfo[8])) / 10,
-                    },
-                    Parameters = attributes.Where(kvp => !keysToRemove.Contains(kvp.Key) && kvp.Value != "-").ToDictionary(kvp => kvp.Key, kvp => kvp.Value)
-                };
+                    JObject device_info = (JObject)product["device_info"];
+                    var attributes = device_info["attributes"].ToObject<Dictionary<string, string>>();
+                    productList.Add(ProductFromAttributes(attributes, device_info["Description"].ToString()));
+                }
+                return productList;
             }
             catch (Exception)
             {
