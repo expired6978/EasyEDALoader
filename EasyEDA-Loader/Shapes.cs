@@ -5,11 +5,12 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Windows.Media;
 
+
 namespace EasyEDA_Loader
 {
     public static class ColorHelper
     {
-        public static Color FromHex(string hex)
+        public static System.Windows.Media.Color FromHex(string hex)
         {
             if (string.IsNullOrWhiteSpace(hex))
                 throw new ArgumentException("Invalid hex string.", nameof(hex));
@@ -31,7 +32,7 @@ namespace EasyEDA_Loader
             byte g = byte.Parse(hex.Substring(4, 2), NumberStyles.HexNumber);
             byte b = byte.Parse(hex.Substring(6, 2), NumberStyles.HexNumber);
 
-            return Color.FromArgb(a, r, g, b);
+            return System.Windows.Media.Color.FromArgb(a, r, g, b);
         }
     }
 

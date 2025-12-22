@@ -1,10 +1,6 @@
 ﻿using PCB;
 using System;
 using System.Collections.Generic;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Media;
-using System.Windows.Shapes;
 
 namespace EasyEDA_Loader
 {
@@ -33,36 +29,45 @@ namespace EasyEDA_Loader
                 IsLocked = ParseBoolean(parts[16]),
             };
         }
-        public override List<UIElement> AddToCanvas(Canvas c, EeFootprintContext ctx)
-        {
-            var elements = new List<UIElement>();
 
-            double Radius = 0;
+        public override List<System.Windows.UIElement> AddToCanvas(
+            System.Windows.Controls.Canvas c,
+            EeFootprintContext ctx)
+        {
+            var elements = new List<System.Windows.UIElement>();
+
+            double radius = 0;
             if (Shape == "OVAL")
             {
-                if (Width > Height)
-                    Radius = Height / 2;
-                else
-                    Radius = Width / 2;
+                radius = (Width > Height) ? Height / 2 : Width / 2;
             }
             else if (Shape == "ELLIPSE")
             {
-                Radius = Math.Max(Height / 2, Width / 2);
+                radius = Math.Max(Height / 2, Width / 2);
             }
-            Rectangle rect = new Rectangle
+
+            var rect = new System.Windows.Shapes.Rectangle
             {
                 Width = Width,
                 Height = Height,
-                RadiusX = Radius,
-                RadiusY = Radius,
-                Fill = new SolidColorBrush(ColorHelper.FromHex(ctx.Layers.GetLayerColor(Layer))),
+                RadiusX = radius,
+                RadiusY = radius,
+                Fill = new System.Windows.Media.SolidColorBrush(
+                    ColorHelper.FromHex(ctx.Layers.GetLayerColor(Layer)))
             };
-            Canvas.SetLeft(rect, CenterX - (Width / 2) - ctx.Box.X);
-            Canvas.SetTop(rect, CenterY - (Height / 2) - ctx.Box.Y);
+
+            System.Windows.Controls.Canvas.SetLeft(
+                rect,
+                CenterX - (Width / 2) - ctx.Box.X
+            );
+            System.Windows.Controls.Canvas.SetTop(
+                rect,
+                CenterY - (Height / 2) - ctx.Box.Y
+            );
 
             if (Rotation > 0)
             {
-                rect.RenderTransform = new RotateTransform
+                rect.RenderTransform = new System.Windows.Media.RotateTransform
                 {
                     Angle = Rotation,
                     CenterX = Width / 2,
@@ -72,71 +77,108 @@ namespace EasyEDA_Loader
 
             elements.Add(rect);
 
-            if (HolePoints.Count >= 2) // Add a pathed hole
+            // Trou "pathed" (oblong)
+            if (HolePoints.Count >= 2)
             {
-                var holePath = new Path
+                var holePath = new System.Windows.Shapes.Path
                 {
-                    Fill = new SolidColorBrush(Color.FromRgb(0, 145, 144))
+                    Fill = new System.Windows.Media.SolidColorBrush(
+                        System.Windows.Media.Color.FromRgb(0, 145, 144))
                 };
-                var holeGeometry = new StreamGeometry();
+
+                var holeGeometry = new System.Windows.Media.StreamGeometry();
 
                 using (var gctx = holeGeometry.Open())
                 {
-                    var start = new Point(HolePoints[1].X - ctx.Box.X, HolePoints[1].Y - ctx.Box.Y);
-                    var end = new Point(HolePoints[0].X - ctx.Box.X, HolePoints[0].Y - ctx.Box.Y);
+                    var start = new System.Windows.Point(
+                        HolePoints[1].X - ctx.Box.X,
+                        HolePoints[1].Y - ctx.Box.Y
+                    );
+                    var end = new System.Windows.Point(
+                        HolePoints[0].X - ctx.Box.X,
+                        HolePoints[0].Y - ctx.Box.Y
+                    );
 
-                    // Direction vector
+                    // Direction
                     var dx = HolePoints[1].X - HolePoints[0].X;
                     var dy = HolePoints[1].Y - HolePoints[0].Y;
                     var len = Math.Sqrt(dx * dx + dy * dy);
                     var ux = dx / len;
                     var uy = dy / len;
 
-                    // Perpendicular vector for radius
+                    // Perpendiculaire pour le rayon
                     var rx = -uy * HoleRadius;
                     var ry = ux * HoleRadius;
 
-                    // Rounded ends
-                    var p1 = new Point(start.X + rx, start.Y + ry);
-                    var p2 = new Point(end.X + rx, end.Y + ry);
-                    var p3 = new Point(end.X - rx, end.Y - ry);
-                    var p4 = new Point(start.X - rx, start.Y - ry);
+                    var p1 = new System.Windows.Point(start.X + rx, start.Y + ry);
+                    var p2 = new System.Windows.Point(end.X + rx, end.Y + ry);
+                    var p3 = new System.Windows.Point(end.X - rx, end.Y - ry);
+                    var p4 = new System.Windows.Point(start.X - rx, start.Y - ry);
 
-                    gctx.BeginFigure(p1, true, true);
-                    gctx.LineTo(p2, true, false);
-                    gctx.ArcTo(p3, new Size(HoleRadius, HoleRadius), 0, false, SweepDirection.Clockwise, true, false);
-                    gctx.LineTo(p4, true, false);
-                    gctx.ArcTo(p1, new Size(HoleRadius, HoleRadius), 0, false, SweepDirection.Clockwise, true, false);
+                    gctx.BeginFigure(p1, isFilled: true, isClosed: true);
+                    gctx.LineTo(p2, isStroked: true, isSmoothJoin: false);
+                    gctx.ArcTo(
+                        p3,
+                        new System.Windows.Size(HoleRadius, HoleRadius),
+                        0,
+                        isLargeArc: false,
+                        sweepDirection: System.Windows.Media.SweepDirection.Clockwise,
+                        isStroked: true,
+                        isSmoothJoin: false
+                    );
+                    gctx.LineTo(p4, isStroked: true, isSmoothJoin: false);
+                    gctx.ArcTo(
+                        p1,
+                        new System.Windows.Size(HoleRadius, HoleRadius),
+                        0,
+                        isLargeArc: false,
+                        sweepDirection: System.Windows.Media.SweepDirection.Clockwise,
+                        isStroked: true,
+                        isSmoothJoin: false
+                    );
                 }
+
                 holePath.Data = holeGeometry;
 
                 if (Rotation > 0)
                 {
-                    holePath.RenderTransform = new RotateTransform
+                    holePath.RenderTransform = new System.Windows.Media.RotateTransform
                     {
                         Angle = Rotation,
-                        CenterX = (HolePoints[1].X - ctx.Box.X - HolePoints[0].X - ctx.Box.X) / 2,
-                        CenterY = (HolePoints[1].Y - ctx.Box.Y - HolePoints[0].Y - ctx.Box.Y) / 2,
+                        CenterX = (HolePoints[1].X - ctx.Box.X
+                                   - (HolePoints[0].X - ctx.Box.X)) / 2,
+                        CenterY = (HolePoints[1].Y - ctx.Box.Y
+                                   - (HolePoints[0].Y - ctx.Box.Y)) / 2,
                     };
                 }
 
                 elements.Add(holePath);
             }
-            else if (HoleRadius > 0) // Add the single hole if there's a radius
+            else if (HoleRadius > 0) // Trou simple
             {
-                Ellipse ellipse = new Ellipse
+                var ellipse = new System.Windows.Shapes.Ellipse
                 {
                     Width = HoleRadius * 2,
                     Height = HoleRadius * 2,
-                    Fill = new SolidColorBrush(Color.FromRgb(0, 145, 144)),
+                    Fill = new System.Windows.Media.SolidColorBrush(
+                        System.Windows.Media.Color.FromRgb(0, 145, 144))
                 };
-                Canvas.SetLeft(ellipse, CenterX - HoleRadius - ctx.Box.X);
-                Canvas.SetTop(ellipse, CenterY - HoleRadius - ctx.Box.Y);
+
+                System.Windows.Controls.Canvas.SetLeft(
+                    ellipse,
+                    CenterX - HoleRadius - ctx.Box.X
+                );
+                System.Windows.Controls.Canvas.SetTop(
+                    ellipse,
+                    CenterY - HoleRadius - ctx.Box.Y
+                );
+
                 elements.Add(ellipse);
             }
 
             return elements;
         }
+
         public override bool AddToComponent(IPCB_LibComponent c, EeFootprintContext ctx)
         {
             TLayerConstant targetLayer;
@@ -145,6 +187,7 @@ namespace EasyEDA_Loader
             {
                 TShape padShape;
                 TExtendedHoleType holeType = TExtendedHoleType.eRoundHole;
+
                 switch (Shape)
                 {
                     case "RECT": padShape = TShape.eRectangular; break;
@@ -152,6 +195,7 @@ namespace EasyEDA_Loader
                     case "ELLIPSE": padShape = TShape.eRounded; break;
                     default: throw new Exception($"Unknown pad shape {Shape}");
                 }
+
                 if (HoleLength > 0)
                 {
                     holeType = TExtendedHoleType.eSlotHole;
@@ -160,11 +204,27 @@ namespace EasyEDA_Loader
                 try
                 {
                     targetLayer = EEPCB.EELayerToAltium(layer.Name);
-                    var pad = EEPCB.CreatePTH(c, targetLayer, holeType, padShape, ConvertX(CenterX, ctx), ConvertY(CenterY, ctx), Height, Width, HoleRadius * 2, Number, IsPlated, Rotation);
+
+                    var pad = EEPCB.CreatePTH(
+                        c,
+                        targetLayer,
+                        holeType,
+                        padShape,
+                        ConvertX(CenterX, ctx),
+                        ConvertY(CenterY, ctx),
+                        Height,
+                        Width,
+                        HoleRadius * 2,
+                        Number,
+                        IsPlated,
+                        Rotation
+                    );
+
                     if (padShape == TShape.eRounded)
                     {
                         pad.SetState_StackCRPctOnLayer(new V7_Layer(targetLayer), 100);
                     }
+
                     if (HoleLength > 0)
                     {
                         if (Height > Width)
@@ -173,6 +233,7 @@ namespace EasyEDA_Loader
                         }
                         pad.SetState_HoleWidth(AltiumApi.MmToCoord(HoleLength));
                     }
+
                     EEPCB.AddToPCB(c, pad);
                 }
                 catch (Exception ex)
@@ -185,6 +246,7 @@ namespace EasyEDA_Loader
             }
             return true;
         }
+
         public string Shape { get; set; }
         public double CenterX { get; set; }
         public double CenterY { get; set; }
@@ -202,5 +264,4 @@ namespace EasyEDA_Loader
         public bool IsPlated { get; set; }
         public bool IsLocked { get; set; }
     }
-
 }

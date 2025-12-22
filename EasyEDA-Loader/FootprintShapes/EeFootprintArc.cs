@@ -1,6 +1,8 @@
 ﻿using PCB;
 using System;
 using System.Collections.Generic;
+
+// On garde les namespaces WPF, ce sont bien eux qu'on veut ici
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -53,7 +55,9 @@ namespace EasyEDA_Loader
                         Radius = radius,
                         StartAngle = startAngle,
                         EndAngle = endAngle,
-                        Sweep = sweep == "1" ? SweepDirection.Clockwise : SweepDirection.Counterclockwise,
+                        Sweep = sweep == "1"
+                            ? System.Windows.Media.SweepDirection.Clockwise
+                            : System.Windows.Media.SweepDirection.Counterclockwise,
                     };
                 }
                 else
@@ -67,9 +71,9 @@ namespace EasyEDA_Loader
             public double Radius { get; set; }
             public double StartAngle { get; set; }
             public double EndAngle { get; set; }
-            public SweepDirection Sweep { get; set; }
-
+            public System.Windows.Media.SweepDirection Sweep { get; set; }
         }
+
         public static EeFootprintArc FromString(string data)
         {
             var parts = data.Split(new[] { "~" }, StringSplitOptions.None);
@@ -85,18 +89,18 @@ namespace EasyEDA_Loader
             };
         }
 
-        public override List<UIElement> AddToCanvas(Canvas c, EeFootprintContext ctx)
+        public override List<System.Windows.UIElement> AddToCanvas(System.Windows.Controls.Canvas c, EeFootprintContext ctx)
         {
             double startAngleRad = Path.StartAngle * Math.PI / 180.0;
             double endAngleRad = Path.EndAngle * Math.PI / 180.0;
 
             // Compute start and end points
-            Point startPoint = new Point(
+            System.Windows.Point startPoint = new System.Windows.Point(
                 Path.X - ctx.Box.X + Path.Radius * Math.Cos(startAngleRad),
                 Path.Y - ctx.Box.Y + Path.Radius * Math.Sin(startAngleRad)
             );
 
-            Point endPoint = new Point(
+            System.Windows.Point endPoint = new System.Windows.Point(
                 Path.X - ctx.Box.X + Path.Radius * Math.Cos(endAngleRad),
                 Path.Y - ctx.Box.Y + Path.Radius * Math.Sin(endAngleRad)
             );
@@ -104,14 +108,15 @@ namespace EasyEDA_Loader
             // Determine if the arc is greater than 180°
             bool isLargeArc = Math.Abs(Path.EndAngle - Path.StartAngle) % 360 > 180;
 
-            // Determine sweep direction
-            SweepDirection sweepDirection = (Path.EndAngle - Path.StartAngle) >= 0
-                ? SweepDirection.Clockwise
-                : SweepDirection.Counterclockwise;
+            // Determine sweep direction (WPF)
+            System.Windows.Media.SweepDirection sweepDirection =
+                (Path.EndAngle - Path.StartAngle) >= 0
+                    ? System.Windows.Media.SweepDirection.Clockwise
+                    : System.Windows.Media.SweepDirection.Counterclockwise;
 
-            return new List<UIElement>
+            return new List<System.Windows.UIElement>
             {
-                new Path
+                new System.Windows.Shapes.Path
                 {
                     Stroke = new SolidColorBrush(ColorHelper.FromHex(ctx.Layers.GetLayerColor(LayerId))),
                     StrokeThickness = StrokeWidth,
@@ -129,7 +134,7 @@ namespace EasyEDA_Loader
                                     new ArcSegment
                                     {
                                         Point = endPoint,
-                                        Size = new Size(Path.Radius, Path.Radius),
+                                        Size = new System.Windows.Size(Path.Radius, Path.Radius),
                                         RotationAngle = 0,
                                         IsLargeArc = isLargeArc,
                                         SweepDirection = sweepDirection
@@ -153,11 +158,25 @@ namespace EasyEDA_Loader
                 {
                     targetLayer = EEPCB.EELayerToAltium(layer.Name);
 
-                    var startAngle = Path.Sweep == SweepDirection.Counterclockwise ? ConvertAngle(Path.StartAngle, ctx) : ConvertAngle(Path.EndAngle, ctx);
-                    var endAngle = Path.Sweep == SweepDirection.Counterclockwise ? ConvertAngle(Path.EndAngle, ctx) : ConvertAngle(Path.StartAngle, ctx);
+                    var startAngle = Path.Sweep == System.Windows.Media.SweepDirection.Counterclockwise
+                        ? ConvertAngle(Path.StartAngle, ctx)
+                        : ConvertAngle(Path.EndAngle, ctx);
+
+                    var endAngle = Path.Sweep == System.Windows.Media.SweepDirection.Counterclockwise
+                        ? ConvertAngle(Path.EndAngle, ctx)
+                        : ConvertAngle(Path.StartAngle, ctx);
 
                     // Angles are flipped due to coordinate system flip
-                    var arc = EEPCB.CreateArc(c, targetLayer, ConvertX(Path.X, ctx), ConvertY(Path.Y, ctx), Path.Radius, StrokeWidth, startAngle, endAngle);
+                    var arc = EEPCB.CreateArc(
+                        c,
+                        targetLayer,
+                        ConvertX(Path.X, ctx),
+                        ConvertY(Path.Y, ctx),
+                        Path.Radius,
+                        StrokeWidth,
+                        startAngle,
+                        endAngle);
+
                     if (arc != null)
                     {
                         EEPCB.AddToPCB(c, arc);
@@ -182,5 +201,4 @@ namespace EasyEDA_Loader
         public string Id { get; set; }
         public bool IsLocked { get; set; }
     }
-
 }

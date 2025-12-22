@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Globalization;
 
 namespace EasyEDA_Loader
 {
@@ -39,7 +40,8 @@ namespace EasyEDA_Loader
                 }
                 else
                 {
-                    int num = (int)MessageBox.Show(ex.Message, "EasyEDA Loader Error", MessageBoxButtons.OK, MessageBoxIcon.Hand);
+                    // int num = (int)MessageBox.Show(ex.Message, "EasyEDA Loader Error", MessageBoxButtons.OK, MessageBoxIcon.Hand);
+                    int num = (int) MessageBox.Show(ex.ToString(), "EasyEDA Loader Error",MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
         }));
@@ -48,6 +50,13 @@ namespace EasyEDA_Loader
           IServerDocumentView argContext,
           ref string argParameters)
         {
+            // Forcer la culture en invariant pour éviter les problèmes de virgule/point
+            var culture = CultureInfo.InvariantCulture;
+            Thread.CurrentThread.CurrentCulture = culture;
+            Thread.CurrentThread.CurrentUICulture = culture;
+            CultureInfo.DefaultThreadCurrentCulture = culture;
+            CultureInfo.DefaultThreadCurrentUICulture = culture;
+
             Dialog dialog = new Dialog();
             DialogResult result = dialog.ShowDialog();
             if (result != DialogResult.OK)
@@ -69,9 +78,17 @@ namespace EasyEDA_Loader
                 root = Task.Run(() => api.GetComponentJsonAsync(dialog.Component, ctx.Token));
                 root.Wait();
             }
-            catch (Exception)
+            //catch (Exception)
+            catch (Exception ex)
             {
-                MessageBox.Show($"Failed to retrieve component info for {dialog.Component}", "EasyEDA Loader Error", MessageBoxButtons.OK, MessageBoxIcon.Hand);
+                //MessageBox.Show($"Failed to retrieve component info for {dialog.Component}", "EasyEDA Loader Error", MessageBoxButtons.OK, MessageBoxIcon.Hand);
+                // TEMPORAIRE : debug
+                MessageBox.Show(
+                    $"Error while retrieving component info for {dialog.Component}:\n\n{ex}",
+                    "EasyEDA Loader Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+
                 return;
             }
 
@@ -145,9 +162,22 @@ namespace EasyEDA_Loader
                 AltiumApi.GlobalVars.PCBServer.PreProcess();
                 SymbolDrawing.CreateComponent(schLib, component, pcbLibraryPath, package, ee_symbol);
 
-                foreach (var kvp in productInfo.Result?.Parameters)
+                //               foreach (var kvp in productInfo.Result?.Parameters)
+                //              {
+                //                   EESCH.AddParameter(component, kvp.Key, kvp.Value);
+                //               }
+                var parameters = productInfo.Result?.Parameters;
+
+                if (parameters != null)
                 {
-                    EESCH.AddParameter(component, kvp.Key, kvp.Value);
+                    foreach (var kvp in parameters)
+                    {
+                        // Par sécurité, on évite les clés nulles
+                        if (!string.IsNullOrEmpty(kvp.Key))
+                        {
+                            EESCH.AddParameter(component, kvp.Key, kvp.Value ?? string.Empty);
+                        }
+                    }
                 }
 
                 AltiumApi.GlobalVars.PCBServer.PostProcess();

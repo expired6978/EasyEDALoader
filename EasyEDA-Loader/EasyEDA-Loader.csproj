@@ -35,19 +35,19 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Altium.Controls">
-      <HintPath>Assemblies\Altium.Controls.dll</HintPath>
+      <HintPath>lib\Altium.Controls.dll</HintPath>
     </Reference>
     <Reference Include="Altium.SDK">
-      <HintPath>Assemblies\Altium.SDK.dll</HintPath>
+      <HintPath>lib\Altium.SDK.dll</HintPath>
     </Reference>
     <Reference Include="Altium.SDK.Interfaces">
-      <HintPath>Assemblies\Altium.SDK.Interfaces.dll</HintPath>
+      <HintPath>lib\Altium.SDK.Interfaces.dll</HintPath>
     </Reference>
     <Reference Include="DevExpress.Utils.v22.1">
-      <HintPath>Assemblies\DevExpress.Utils.v22.1.dll</HintPath>
+      <HintPath>lib\DevExpress.Utils.v22.1.dll</HintPath>
     </Reference>
     <Reference Include="DevExpress.XtraEditors.v22.1">
-      <HintPath>Assemblies\DevExpress.XtraEditors.v22.1.dll</HintPath>
+      <HintPath>lib\DevExpress.XtraEditors.v22.1.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>

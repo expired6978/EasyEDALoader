@@ -1,11 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.0.32126.317
+# Visual Studio Version 18
+VisualStudioVersion = 18.1.11312.151
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasyEDA-Loader", "EasyEDA-Loader.csproj", "{6FE3A9E3-36F1-4B94-967E-772357D2C44F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Standalone", "..\Standalone\Standalone.csproj", "{78759C90-0844-482F-A87F-A40E25ADF6EA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasyEDA-Loader_AD25", "..\EasyEDA-Loader_AD25\EasyEDA-Loader_AD25.csproj", "{11CE423B-0A44-4339-AB71-1F217453CA63}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Standalone_AD25", "..\Standalone_AD25\Standalone_AD25.csproj", "{92ABC413-242D-4B99-A25D-1CD27D99FA85}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +25,14 @@ Global
 		{78759C90-0844-482F-A87F-A40E25ADF6EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{78759C90-0844-482F-A87F-A40E25ADF6EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{78759C90-0844-482F-A87F-A40E25ADF6EA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{11CE423B-0A44-4339-AB71-1F217453CA63}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{11CE423B-0A44-4339-AB71-1F217453CA63}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{11CE423B-0A44-4339-AB71-1F217453CA63}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{11CE423B-0A44-4339-AB71-1F217453CA63}.Release|Any CPU.Build.0 = Release|Any CPU
+		{92ABC413-242D-4B99-A25D-1CD27D99FA85}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{92ABC413-242D-4B99-A25D-1CD27D99FA85}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{92ABC413-242D-4B99-A25D-1CD27D99FA85}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{92ABC413-242D-4B99-A25D-1CD27D99FA85}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

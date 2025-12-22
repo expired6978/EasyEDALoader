@@ -38,7 +38,7 @@ namespace EasyEDA_Loader
         public async Task<Root> GetComponentJsonAsync(string lcscId, CancellationToken cancellationToken)
         {
             string url = $"https://easyeda.com/api/products/{lcscId}/components?version={Version}";
-
+            System.Diagnostics.Debug.WriteLine("URL EasyEDA = " + url);
             try
             {
                 var response = await HttpClient.GetAsync(url, cancellationToken);
