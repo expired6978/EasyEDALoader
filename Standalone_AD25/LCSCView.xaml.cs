@@ -10,7 +10,9 @@ namespace Standalone_AD25
 {
     public partial class LCSCView : System.Windows.Controls.UserControl
     {
-        private TaskCompletionSource<bool>? _pocTcs;
+        private TaskCompletionSource<bool>? _extractTcs;
+        private bool _webMessageHooked;
+
         public LCSCView()
         {
             InitializeComponent();
@@ -21,166 +23,28 @@ namespace Standalone_AD25
             };
         }
 
-        // ===== POC synchronization =====
-        private TaskCompletionSource<bool>? _pocCompletionSource;
-
-        // Ensures WebMessageReceived is hooked only once
-        private bool _webMessageHooked = false;
-
-        /// <summary>
-        /// Receives messages from injected JavaScript (PDF extraction POC)
-        /// </summary>
-        private void HiddenBrowser_WebMessageReceived(
-            object? sender,
-            CoreWebView2WebMessageReceivedEventArgs e)
-        {
-            try
-            {
-                using var doc = JsonDocument.Parse(e.WebMessageAsJson);
-                var root = doc.RootElement;
-
-                string? type = root.TryGetProperty("type", out var t)
-                    ? t.GetString()
-                    : null;
-
-                // --- Error coming from JavaScript ---
-                if (type == "PDF_ERROR")
-                {
-                    string message = root.TryGetProperty("message", out var m)
-                        ? m.GetString() ?? "Unknown error"
-                        : "Unknown error";
-
-                    System.Windows.MessageBox.Show(
-                        "PDF extraction failed:\n" + message,
-                        "LCSC",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Error
-                    );
-
-                    _pocTcs?.TrySetResult(false);
-                    return;
-                }
-
-                // --- Ignore unrelated messages ---
-                if (type != "PDF_CONTENT")
-                    return;
-
-                // --- Extract PDF binary ---
-                var bytes = root.GetProperty("payload")
-                                .EnumerateArray()
-                                .Select(x => (byte)x.GetInt32())
-                                .ToArray();
-
-                if (bytes.Length < 1024)
-                {
-                    System.Windows.MessageBox.Show(
-                        "Received PDF is too small and likely invalid.",
-                        "LCSC",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Error
-                    );
-
-                    _pocTcs?.TrySetResult(false);
-                    return;
-                }
-
-                // --- Extract PDF URL (used for filename) ---
-                string pdfUrl = root.TryGetProperty("url", out var u)
-                    ? u.GetString() ?? ""
-                    : "";
-
-                string defaultFileName = BuildPdfFileName(pdfUrl);
-
-                // --- Ask user where to save ---
-                var dlg = new Microsoft.Win32.SaveFileDialog
-                {
-                    Title = "Save LCSC datasheet",
-                    Filter = "PDF files (*.pdf)|*.pdf",
-                    FileName = defaultFileName,
-                    InitialDirectory = Environment.GetFolderPath(
-                        Environment.SpecialFolder.Desktop),
-                    OverwritePrompt = false
-                };
-
-                if (dlg.ShowDialog() != true)
-                {
-                    _pocTcs?.TrySetResult(false);
-                    return;
-                }
-
-                // --- Write file (overwrite-safe) ---
-                try
-                {
-                    if (System.IO.File.Exists(dlg.FileName))
-                    {
-                        System.IO.File.Delete(dlg.FileName);
-                    }
-
-                    System.IO.File.WriteAllBytes(dlg.FileName, bytes);
-
-                    System.Windows.MessageBox.Show(
-                        $"PDF saved successfully:\n{dlg.FileName}\nSize: {bytes.Length:N0} bytes",
-                        "LCSC",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Information
-                    );
-
-                    _pocTcs?.TrySetResult(true);
-                }
-                catch (Exception ioEx)
-                {
-                    System.Windows.MessageBox.Show(
-                        "Failed to write PDF file:\n" + ioEx.Message,
-                        "LCSC",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Error
-                    );
-
-                    _pocTcs?.TrySetResult(false);
-                }
-
-
-                _pocTcs?.TrySetResult(true);
-            }
-            catch (Exception ex)
-            {
-                System.Windows.MessageBox.Show(
-                    "Unexpected error while saving PDF:\n" + ex.Message,
-                    "LCSC",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error
-                );
-
-                _pocTcs?.TrySetResult(false);
-            }
-        }
-
-
-        /// <summary>
-        /// Initializes visible and hidden WebView2 instances (once)
-        /// </summary>
+        // =========================================================
+        // WebView initialization
+        // =========================================================
         private async Task EnsureBrowserReady()
         {
             if (Browser.CoreWebView2 != null)
                 return;
 
-            // === Visible WebView ===
+            // Visible WebView (navigation)
             await Browser.EnsureCoreWebView2Async();
             Browser.CoreWebView2.NavigationCompleted += OnNavigationCompleted;
-            Browser.CoreWebView2.DownloadStarting += CoreWebView2_DownloadStarting;
             Browser.CoreWebView2.Settings.IsWebMessageEnabled = true;
 
-            // Prevent window.open()
-            Browser.CoreWebView2.NewWindowRequested += (sender, args) =>
+            Browser.CoreWebView2.NewWindowRequested += (s, e) =>
             {
-                args.Handled = true;
-                Browser.CoreWebView2.Navigate(args.Uri);
+                e.Handled = true;
+                Browser.CoreWebView2.Navigate(e.Uri);
             };
 
-            // === Hidden WebView (PDF processing) ===
+            // Hidden WebView (PDF extraction)
             await HiddenBrowser.EnsureCoreWebView2Async();
             HiddenBrowser.CoreWebView2.Settings.IsWebMessageEnabled = true;
-            HiddenBrowser.CoreWebView2.DownloadStarting += CoreWebView2_DownloadStarting;
 
             if (!_webMessageHooked)
             {
@@ -189,9 +53,6 @@ namespace Standalone_AD25
             }
         }
 
-        /// <summary>
-        /// Handles navigation errors
-        /// </summary>
         private void OnNavigationCompleted(
             object? sender,
             CoreWebView2NavigationCompletedEventArgs e)
@@ -200,44 +61,22 @@ namespace Standalone_AD25
             {
                 System.Windows.MessageBox.Show(
                     $"Navigation failed (HTTP {e.HttpStatusCode})",
-                    "WebView2",
+                    "LCSC",
                     MessageBoxButton.OK,
                     MessageBoxImage.Warning);
             }
         }
 
-        /// <summary>
-        /// External navigation entry point
-        /// </summary>
         public async Task NavigateToAsync(string url)
         {
             await EnsureBrowserReady();
             Browser.CoreWebView2.Navigate(url);
         }
 
-        /// <summary>
-        /// Detects the "The part does not exist" LCSC page
-        /// </summary>
-        public async Task<bool> IsNonExistingAsync()
-        {
-            await EnsureBrowserReady();
-
-            // Structural check
-            string jsCheck = "(() => document.querySelector('.none-product-layout') !== null)();";
-            string result = (await Browser.ExecuteScriptAsync(jsCheck)).Trim('"');
-
-            if (result == "true")
-                return true;
-
-            // Text fallback
-            string body = (await Browser.ExecuteScriptAsync("document.body.innerText")).Trim('"');
-            return body.Contains("The part does not exist", StringComparison.OrdinalIgnoreCase);
-        }
-
-        /// <summary>
-        /// POC: Extract PDF from LCSC datasheet viewer and save to Desktop
-        /// </summary>
-        public async Task<bool> Poc_ExtractPdfToDesktopAsync()
+        // =========================================================
+        // Datasheet extraction (FINAL workflow)
+        // =========================================================
+        public async Task<bool> ExtractDatasheetAsync()
         {
             await EnsureBrowserReady();
 
@@ -247,8 +86,8 @@ namespace Standalone_AD25
             if (!match.Success)
             {
                 System.Windows.MessageBox.Show(
-                    "Unable to find LCSC part number (Cxxxx) in URL.",
-                    "LCSC POC",
+                    "Unable to detect LCSC part number (Cxxxx).",
+                    "LCSC",
                     MessageBoxButton.OK,
                     MessageBoxImage.Warning);
                 return false;
@@ -257,11 +96,11 @@ namespace Standalone_AD25
             string sku = match.Value;
             string viewerUrl = $"https://www.lcsc.com/datasheet/{sku}.pdf";
 
+            _extractTcs = new TaskCompletionSource<bool>();
+
             HiddenBrowser.CoreWebView2.Navigate(viewerUrl);
 
-            _pocCompletionSource = new TaskCompletionSource<bool>();
-
-            // Simple delay (POC only)
+            // Simple delay (viewer load)
             await Task.Delay(3000);
 
             await HiddenBrowser.CoreWebView2.ExecuteScriptAsync(@"
@@ -278,7 +117,6 @@ namespace Standalone_AD25
 
     const pdfUrl = iframe.src;
     const res = await fetch(pdfUrl);
-
     if (!res.ok) {
       window.chrome.webview.postMessage({
         type: 'PDF_ERROR',
@@ -304,34 +142,78 @@ namespace Standalone_AD25
 })();
 ");
 
-
-            bool success = await _pocCompletionSource.Task;
-            _pocCompletionSource = null;
-            return success;
+            bool ok = await _extractTcs.Task;
+            _extractTcs = null;
+            return ok;
         }
 
-        /// <summary>
-        /// Intercepts WebView2 downloads and shows a SaveFileDialog
-        /// </summary>
-        private void CoreWebView2_DownloadStarting(
+        // =========================================================
+        // WebMessage receiver
+        // =========================================================
+        private void HiddenBrowser_WebMessageReceived(
             object? sender,
-            CoreWebView2DownloadStartingEventArgs e)
+            CoreWebView2WebMessageReceivedEventArgs e)
         {
-            e.Handled = true;
+            if (_extractTcs == null)
+                return;
 
-            var dialog = new Microsoft.Win32.SaveFileDialog
+            try
             {
-                Filter = "PDF files (*.pdf)|*.pdf",
-                FileName = System.IO.Path.GetFileName(e.ResultFilePath)
-            };
+                using var doc = JsonDocument.Parse(e.WebMessageAsJson);
+                var root = doc.RootElement;
 
-            if (dialog.ShowDialog() == true)
-            {
-                e.ResultFilePath = dialog.FileName;
+                string type = root.GetProperty("type").GetString() ?? "";
+
+                if (type == "PDF_ERROR")
+                {
+                    System.Windows.MessageBox.Show(
+                        root.GetProperty("message").GetString(),
+                        "LCSC",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+
+                    _extractTcs.TrySetResult(false);
+                    return;
+                }
+
+                if (type != "PDF_CONTENT")
+                    return;
+
+                byte[] bytes = root.GetProperty("payload")
+                                   .EnumerateArray()
+                                   .Select(x => (byte)x.GetInt32())
+                                   .ToArray();
+
+                string pdfUrl = root.GetProperty("url").GetString() ?? "";
+                string defaultName = BuildPdfFileName(pdfUrl);
+
+                var dlg = new Microsoft.Win32.SaveFileDialog
+                {
+                    Title = "Save LCSC datasheet",
+                    Filter = "PDF files (*.pdf)|*.pdf",
+                    FileName = defaultName,
+                    InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop)
+                };
+
+                if (dlg.ShowDialog() != true)
+                {
+                    _extractTcs.TrySetResult(false);
+                    return;
+                }
+
+                System.IO.File.WriteAllBytes(dlg.FileName, bytes);
+
+                _extractTcs.TrySetResult(true);
             }
-            else
+            catch (Exception ex)
             {
-                e.Cancel = true;
+                System.Windows.MessageBox.Show(
+                    ex.Message,
+                    "LCSC",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+
+                _extractTcs.TrySetResult(false);
             }
         }
 
@@ -339,23 +221,15 @@ namespace Standalone_AD25
         {
             try
             {
-                string fileName = System.IO.Path.GetFileName(new Uri(pdfUrl).AbsolutePath);
-
-                // Safety fallback
-                if (string.IsNullOrWhiteSpace(fileName) || !fileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
-                    return "datasheet.pdf";
-
-                // Windows-safe filename
+                string name = System.IO.Path.GetFileName(new Uri(pdfUrl).AbsolutePath);
                 foreach (char c in System.IO.Path.GetInvalidFileNameChars())
-                    fileName = fileName.Replace(c, '_');
-
-                return fileName;
+                    name = name.Replace(c, '_');
+                return string.IsNullOrWhiteSpace(name) ? "datasheet.pdf" : name;
             }
             catch
             {
                 return "datasheet.pdf";
             }
         }
-
     }
 }

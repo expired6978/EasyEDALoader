@@ -39,7 +39,7 @@
 
         <!-- Bouton extract PDF -->
         <Button x:Name="BtnExtractPdf"
-                Content="Extract PDF"
+                Content="Extract Datasheet"
                 Width="120"
                 Height="30"
                 Margin="10"
