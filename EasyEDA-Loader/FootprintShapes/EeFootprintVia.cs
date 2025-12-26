@@ -11,11 +11,11 @@ namespace EasyEDA_Loader
             var parts = data.Split(new[] { "~" }, StringSplitOptions.None);
             return new EeFootprintVia
             {
-                CenterX = ConvertToMM(double.Parse(parts[1])),
-                CenterY = ConvertToMM(double.Parse(parts[2])),
-                Diameter = ConvertToMM(double.Parse(parts[3])),
+                CenterX = ConvertToMM(EeShape.ParseDouble(parts[1])),
+                CenterY = ConvertToMM(EeShape.ParseDouble(parts[2])),
+                Diameter = ConvertToMM(EeShape.ParseDouble(parts[3])),
                 Net = parts[4],
-                Radius = ConvertToMM(double.Parse(parts[5])),
+                Radius = ConvertToMM(EeShape.ParseDouble(parts[5])),
                 Id = parts[6],
                 IsLocked = ParseBoolean(parts[7]),
             };

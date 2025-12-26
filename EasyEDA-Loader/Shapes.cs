@@ -50,7 +50,7 @@ namespace EasyEDA_Loader
         public static double ParseFloat(string raw)
         {
             if (string.IsNullOrWhiteSpace(raw)) return 0.0;
-            if (double.TryParse(raw, out double num))
+            if (double.TryParse(raw.Replace(',', '.'), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double num))
             {
                 return num;
             }
@@ -92,7 +92,7 @@ namespace EasyEDA_Loader
             if (string.IsNullOrWhiteSpace(raw))
                 return null;
 
-            if (double.TryParse(raw, out double result))
+            if (double.TryParse(raw.Replace(',', '.'), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double result))
                 return result;
 
             throw new FormatException($"Invalid double value: '{raw}'");
@@ -107,6 +107,24 @@ namespace EasyEDA_Loader
         {
             return input * 10.0 * 0.0254;
         }
+
+        public static double ParseDouble(string raw)
+        {
+            if (string.IsNullOrWhiteSpace(raw)) return 0;
+
+            // Étape 1 : Nettoyage manuel (sécurité ultime)
+            // On remplace la virgule par un point pour être sûr que le format est X.Y
+            string cleaned = raw.Replace(',', '.').Trim();
+
+            // Étape 2 : Parsing avec CultureInfo.InvariantCulture
+            // Cela force .NET à ignorer les réglages "Français" du PC
+            if (double.TryParse(cleaned, NumberStyles.Any, CultureInfo.InvariantCulture, out double result))
+            {
+                return result;
+            }
+
+            return 0;
+        }
     }
     public class EePoint
     {
@@ -118,8 +136,8 @@ namespace EasyEDA_Loader
             {
                 points.Add(new EePoint
                 {
-                    X = EeShape.ConvertToMM(double.Parse(pts[i * 2])),
-                    Y = EeShape.ConvertToMM(double.Parse(pts[i * 2 + 1])),
+                    X = EeShape.ConvertToMM(EeShape.ParseDouble(pts[i * 2])),
+                    Y = EeShape.ConvertToMM(EeShape.ParseDouble(pts[i * 2 + 1])),
                 });
             }
             return points;

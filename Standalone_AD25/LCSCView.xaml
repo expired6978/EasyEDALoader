@@ -4,17 +4,10 @@
              xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf">
 
     <Grid>
-        <!-- Main visible WebView -->
         <wv2:WebView2 x:Name="Browser"/>
 
-        <!-- Hidden WebView used for PDF extraction only -->
-        <wv2:WebView2
-            x:Name="HiddenBrowser"
-            Visibility="Collapsed"
-            IsHitTestVisible="False"
-            Focusable="False"
-            Width="0"
-            Height="0" />
+        <wv2:WebView2 x:Name="HiddenBrowser"
+                      Width="0" Height="0"
+                      IsHitTestVisible="False" Focusable="False" />
     </Grid>
-
 </UserControl>

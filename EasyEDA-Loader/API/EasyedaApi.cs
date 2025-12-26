@@ -187,21 +187,21 @@ namespace EasyEDA_Loader
                 Description = description,
                 Size = new Vec3
                 {
-                    X = EeShape.ConvertToMM(double.Parse(transformInfo[0])) / 10,
-                    Y = EeShape.ConvertToMM(double.Parse(transformInfo[1])) / 10,
-                    Z = EeShape.ConvertToMM(double.Parse(transformInfo[2])) / 10,
+                    X = EeShape.ConvertToMM(EeShape.ParseDouble(transformInfo[0])) / 10,
+                    Y = EeShape.ConvertToMM(EeShape.ParseDouble(transformInfo[1])) / 10,
+                    Z = EeShape.ConvertToMM(EeShape.ParseDouble(transformInfo[2])) / 10,
                 },
                 Rotation = new Vec3
                 {
-                    X = double.Parse(transformInfo[3]),
-                    Y = double.Parse(transformInfo[4]),
-                    Z = double.Parse(transformInfo[5]),
+                    X = EeShape.ParseDouble(transformInfo[3]),
+                    Y = EeShape.ParseDouble(transformInfo[4]),
+                    Z = EeShape.ParseDouble(transformInfo[5]),
                 },
                 Offset = new Vec3
                 {
-                    X = EeShape.ConvertToMM(double.Parse(transformInfo[6])) / 10,
-                    Y = EeShape.ConvertToMM(double.Parse(transformInfo[7])) / 10,
-                    Z = EeShape.ConvertToMM(double.Parse(transformInfo[8])) / 10,
+                    X = EeShape.ConvertToMM(EeShape.ParseDouble(transformInfo[6])) / 10,
+                    Y = EeShape.ConvertToMM(EeShape.ParseDouble(transformInfo[7])) / 10,
+                    Z = EeShape.ConvertToMM(EeShape.ParseDouble(transformInfo[8])) / 10,
                 },
                 Parameters = attributes.Where(kvp => !keysToRemove.Contains(kvp.Key) && kvp.Value != "-").ToDictionary(kvp => kvp.Key, kvp => kvp.Value)
             };

@@ -14,7 +14,32 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<PackageReference Include="HelixToolkit.Wpf" Version="3.1.2" />
 		<PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2592.51" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Reference Include="Altium.Controls">
+	    <HintPath>..\EasyEDA-Loader\lib\AD25\Altium.Controls.dll</HintPath>
+	    <Private>True</Private>
+	  </Reference>
+	  <Reference Include="Altium.SDK">
+	    <HintPath>..\EasyEDA-Loader\lib\AD25\Altium.SDK.dll</HintPath>
+	    <Private>True</Private>
+	  </Reference>
+	  <Reference Include="Altium.SDK.Interfaces">
+	    <HintPath>..\EasyEDA-Loader\lib\AD25\Altium.SDK.Interfaces.dll</HintPath>
+	    <Private>True</Private>
+	  </Reference>
+	  <Reference Include="DevExpress.Utils.v24.1">
+	    <HintPath>..\EasyEDA-Loader\lib\AD25\DevExpress.Utils.v24.1.dll</HintPath>
+	    <Private>True</Private>
+	  </Reference>
+	  <Reference Include="DevExpress.XtraEditors.v24.1">
+	    <HintPath>..\EasyEDA-Loader\lib\AD25\DevExpress.XtraEditors.v24.1.dll</HintPath>
+	    <Private>True</Private>
+	  </Reference>
 	</ItemGroup>
 
 </Project>

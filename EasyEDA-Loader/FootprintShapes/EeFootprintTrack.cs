@@ -15,7 +15,7 @@ namespace EasyEDA_Loader
             var parts = data.Split(new[] { "~" }, StringSplitOptions.None);
             return new EeFootprintTrack
             {
-                StrokeWidth = ConvertToMM(double.Parse(parts[1])),
+                StrokeWidth = ConvertToMM(EeShape.ParseDouble(parts[1])),
                 LayerId = parts[2],
                 Net = parts[3],
                 Points = EePoint.ListFromString(parts[4]),

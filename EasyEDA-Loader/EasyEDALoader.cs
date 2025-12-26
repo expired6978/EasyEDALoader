@@ -16,6 +16,20 @@ namespace EasyEDA_Loader
     {
         private bool noGUIMode;
 
+        static EasyEDALoaderModule()
+        {
+            // On définit la culture une fois pour toutes pour toute la DLL
+            var culture = CultureInfo.InvariantCulture;
+
+            // Pour le thread principal
+            Thread.CurrentThread.CurrentCulture = culture;
+            Thread.CurrentThread.CurrentUICulture = culture;
+
+            // Pour tous les nouveaux threads (Task.Run, etc.) - CRUCIAL pour le JSON
+            CultureInfo.DefaultThreadCurrentCulture = culture;
+            CultureInfo.DefaultThreadCurrentUICulture = culture;
+        }
+
         public EasyEDALoaderModule(IClient argClient)
           : base(argClient, "EasyEDA-Loader")
         {
@@ -51,11 +65,11 @@ namespace EasyEDA_Loader
           ref string argParameters)
         {
             // Forcer la culture en invariant pour éviter les problèmes de virgule/point
-            var culture = CultureInfo.InvariantCulture;
-            Thread.CurrentThread.CurrentCulture = culture;
-            Thread.CurrentThread.CurrentUICulture = culture;
-            CultureInfo.DefaultThreadCurrentCulture = culture;
-            CultureInfo.DefaultThreadCurrentUICulture = culture;
+            //var culture = CultureInfo.InvariantCulture;
+            //Thread.CurrentThread.CurrentCulture = culture;
+            //Thread.CurrentThread.CurrentUICulture = culture;
+            //CultureInfo.DefaultThreadCurrentCulture = culture;
+            //CultureInfo.DefaultThreadCurrentUICulture = culture;
 
             Dialog dialog = new Dialog();
             DialogResult result = dialog.ShowDialog();

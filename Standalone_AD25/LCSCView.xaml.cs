@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -13,28 +12,36 @@ namespace Standalone_AD25
         private TaskCompletionSource<bool>? _extractTcs;
         private bool _webMessageHooked;
 
+        // État d’extraction (ANTI double message)
+        private bool _extractInProgress;
+
+        // Nom du datasheet extrait depuis la page produit
+        private string? _pendingDatasheetName;
+
+        public event EventHandler<string>? UrlChanged;
+
         public LCSCView()
         {
             InitializeComponent();
-
-            Loaded += async (_, __) =>
-            {
-                await EnsureBrowserReady();
-            };
+            Loaded += async (_, __) => await EnsureBrowserReady();
         }
 
-        // =========================================================
-        // WebView initialization
-        // =========================================================
+        public Microsoft.Web.WebView2.Wpf.WebView2 BrowserControl => Browser;
+
+        // -------------------------------------------------
+        // INIT WEBVIEW2
+        // -------------------------------------------------
+
         private async Task EnsureBrowserReady()
         {
             if (Browser.CoreWebView2 != null)
                 return;
 
-            // Visible WebView (navigation)
+            // Browser visible (page produit)
             await Browser.EnsureCoreWebView2Async();
-            Browser.CoreWebView2.NavigationCompleted += OnNavigationCompleted;
-            Browser.CoreWebView2.Settings.IsWebMessageEnabled = true;
+
+            Browser.CoreWebView2.SourceChanged += (_, __) =>
+                UrlChanged?.Invoke(this, Browser.Source?.ToString() ?? "");
 
             Browser.CoreWebView2.NewWindowRequested += (s, e) =>
             {
@@ -42,7 +49,7 @@ namespace Standalone_AD25
                 Browser.CoreWebView2.Navigate(e.Uri);
             };
 
-            // Hidden WebView (PDF extraction)
+            // Browser caché (PDF)
             await HiddenBrowser.EnsureCoreWebView2Async();
             HiddenBrowser.CoreWebView2.Settings.IsWebMessageEnabled = true;
 
@@ -53,19 +60,9 @@ namespace Standalone_AD25
             }
         }
 
-        private void OnNavigationCompleted(
-            object? sender,
-            CoreWebView2NavigationCompletedEventArgs e)
-        {
-            if (!e.IsSuccess || (e.HttpStatusCode >= 400 && e.HttpStatusCode <= 599))
-            {
-                System.Windows.MessageBox.Show(
-                    $"Navigation failed (HTTP {e.HttpStatusCode})",
-                    "LCSC",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
-            }
-        }
+        // -------------------------------------------------
+        // NAVIGATION
+        // -------------------------------------------------
 
         public async Task NavigateToAsync(string url)
         {
@@ -73,12 +70,39 @@ namespace Standalone_AD25
             Browser.CoreWebView2.Navigate(url);
         }
 
-        // =========================================================
-        // Datasheet extraction (FINAL workflow)
-        // =========================================================
+        // -------------------------------------------------
+        // EXTRACTION NOM DATASHEET (PAGE PRODUIT)
+        // -------------------------------------------------
+
+        private async Task<string?> ExtractDatasheetNameFromProductPageAsync()
+        {
+            await EnsureBrowserReady();
+
+            string script = @"
+(() => {
+    const span = document.querySelector('a[href^=""/datasheet/""] span');
+    if (!span) return null;
+    return span.textContent.trim();
+})();
+";
+            string json = await Browser.CoreWebView2.ExecuteScriptAsync(script);
+
+            if (string.IsNullOrWhiteSpace(json) || json == "null")
+                return null;
+
+            return JsonSerializer.Deserialize<string>(json);
+        }
+
+        // -------------------------------------------------
+        // DATASHEET EXTRACTION (PDF)
+        // -------------------------------------------------
+
         public async Task<bool> ExtractDatasheetAsync()
         {
             await EnsureBrowserReady();
+
+            if (_extractInProgress)
+                return false; // sécurité
 
             string currentUrl = Browser.Source?.ToString() ?? "";
             var match = Regex.Match(currentUrl, @"C\d+");
@@ -86,75 +110,105 @@ namespace Standalone_AD25
             if (!match.Success)
             {
                 System.Windows.MessageBox.Show(
-                    "Unable to detect LCSC part number (Cxxxx).",
-                    "LCSC",
+                    "Impossible de détecter le SKU (Cxxxx).",
+                    "Erreur LCSC",
                     MessageBoxButton.OK,
                     MessageBoxImage.Warning);
                 return false;
             }
 
             string sku = match.Value;
-            string viewerUrl = $"https://www.lcsc.com/datasheet/{sku}.pdf";
+
+            // 🔹 Extraction du nom AVANT de quitter la page produit
+            try
+            {
+                _pendingDatasheetName =
+                    await ExtractDatasheetNameFromProductPageAsync();
+            }
+            catch
+            {
+                _pendingDatasheetName = null;
+            }
 
             _extractTcs = new TaskCompletionSource<bool>();
+            _extractInProgress = true;
 
+            string viewerUrl = $"https://www.lcsc.com/datasheet/{sku}.pdf";
             HiddenBrowser.CoreWebView2.Navigate(viewerUrl);
 
-            // Simple delay (viewer load)
-            await Task.Delay(3000);
-
-            await HiddenBrowser.CoreWebView2.ExecuteScriptAsync(@"
+            string script = @"
 (async () => {
-  try {
-    const iframe = document.querySelector('iframe[src$="".pdf""]');
-    if (!iframe) {
-      window.chrome.webview.postMessage({
-        type: 'PDF_ERROR',
-        message: 'PDF iframe not found'
-      });
-      return;
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+    let iframe = null;
+    let attempts = 0;
+
+    while (attempts < 50) {
+        iframe = document.querySelector('iframe[src$="".pdf""]');
+        if (iframe) break;
+        await sleep(200);
+        attempts++;
     }
 
-    const pdfUrl = iframe.src;
-    const res = await fetch(pdfUrl);
-    if (!res.ok) {
-      window.chrome.webview.postMessage({
-        type: 'PDF_ERROR',
-        message: 'PDF fetch failed: ' + res.status
-      });
-      return;
+    const targetUrl =
+        iframe ? iframe.src :
+        (window.location.href.endsWith('.pdf') ? window.location.href : null);
+
+    if (!targetUrl) {
+        window.chrome.webview.postMessage({
+            type: 'PDF_ERROR',
+            message: 'PDF introuvable'
+        });
+        return;
     }
 
-    const buf = await res.arrayBuffer();
-    const arr = Array.from(new Uint8Array(buf));
+    try {
+        const res = await fetch(targetUrl);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
 
-    window.chrome.webview.postMessage({
-      type: 'PDF_CONTENT',
-      payload: arr,
-      url: pdfUrl
-    });
-  } catch (e) {
-    window.chrome.webview.postMessage({
-      type: 'PDF_ERROR',
-      message: e.toString()
-    });
-  }
+        const blob = await res.blob();
+        const reader = new FileReader();
+
+        reader.onloadend = () => {
+            const base64 = reader.result.split(',')[1];
+            window.chrome.webview.postMessage({
+                type: 'PDF_CONTENT',
+                payload: base64
+            });
+        };
+
+        reader.readAsDataURL(blob);
+    }
+    catch (e) {
+        window.chrome.webview.postMessage({
+            type: 'PDF_ERROR',
+            message: e.toString()
+        });
+    }
 })();
-");
+";
+            await Task.Delay(300);
+            await HiddenBrowser.CoreWebView2.ExecuteScriptAsync(script);
 
-            bool ok = await _extractTcs.Task;
+            bool result = await _extractTcs.Task;
+
+            // 🔒 NETTOYAGE SAFE (UNE SEULE FOIS)
             _extractTcs = null;
-            return ok;
+            _pendingDatasheetName = null;
+            _extractInProgress = false;
+
+            return result;
         }
 
-        // =========================================================
-        // WebMessage receiver
-        // =========================================================
+        // -------------------------------------------------
+        // WEB MESSAGE HANDLER (ANTI RACE CONDITION)
+        // -------------------------------------------------
+
         private void HiddenBrowser_WebMessageReceived(
             object? sender,
             CoreWebView2WebMessageReceivedEventArgs e)
         {
-            if (_extractTcs == null)
+            if (!_extractInProgress || _extractTcs == null)
                 return;
 
             try
@@ -166,69 +220,58 @@ namespace Standalone_AD25
 
                 if (type == "PDF_ERROR")
                 {
-                    System.Windows.MessageBox.Show(
-                        root.GetProperty("message").GetString(),
-                        "LCSC",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Error);
+                    _extractInProgress = false;
+
+                    string msg = root.GetProperty("message").GetString()
+                                 ?? "Erreur PDF";
+
+                    System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        System.Windows.MessageBox.Show(
+                            msg,
+                            "Erreur PDF",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Error);
+                    });
 
                     _extractTcs.TrySetResult(false);
-                    return;
                 }
-
-                if (type != "PDF_CONTENT")
-                    return;
-
-                byte[] bytes = root.GetProperty("payload")
-                                   .EnumerateArray()
-                                   .Select(x => (byte)x.GetInt32())
-                                   .ToArray();
-
-                string pdfUrl = root.GetProperty("url").GetString() ?? "";
-                string defaultName = BuildPdfFileName(pdfUrl);
-
-                var dlg = new Microsoft.Win32.SaveFileDialog
+                else if (type == "PDF_CONTENT")
                 {
-                    Title = "Save LCSC datasheet",
-                    Filter = "PDF files (*.pdf)|*.pdf",
-                    FileName = defaultName,
-                    InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop)
-                };
+                    _extractInProgress = false;
 
-                if (dlg.ShowDialog() != true)
-                {
-                    _extractTcs.TrySetResult(false);
-                    return;
+                    byte[] bytes = Convert.FromBase64String(
+                        root.GetProperty("payload").GetString() ?? "");
+
+                    string filename =
+                        !string.IsNullOrWhiteSpace(_pendingDatasheetName)
+                            ? _pendingDatasheetName + ".pdf"
+                            : "datasheet.pdf";
+
+                    System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        var dlg = new Microsoft.Win32.SaveFileDialog
+                        {
+                            Filter = "PDF (*.pdf)|*.pdf",
+                            FileName = filename
+                        };
+
+                        if (dlg.ShowDialog() == true)
+                        {
+                            System.IO.File.WriteAllBytes(dlg.FileName, bytes);
+                            _extractTcs.TrySetResult(true);
+                        }
+                        else
+                        {
+                            _extractTcs.TrySetResult(false);
+                        }
+                    });
                 }
-
-                System.IO.File.WriteAllBytes(dlg.FileName, bytes);
-
-                _extractTcs.TrySetResult(true);
-            }
-            catch (Exception ex)
-            {
-                System.Windows.MessageBox.Show(
-                    ex.Message,
-                    "LCSC",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-
-                _extractTcs.TrySetResult(false);
-            }
-        }
-
-        private static string BuildPdfFileName(string pdfUrl)
-        {
-            try
-            {
-                string name = System.IO.Path.GetFileName(new Uri(pdfUrl).AbsolutePath);
-                foreach (char c in System.IO.Path.GetInvalidFileNameChars())
-                    name = name.Replace(c, '_');
-                return string.IsNullOrWhiteSpace(name) ? "datasheet.pdf" : name;
             }
             catch
             {
-                return "datasheet.pdf";
+                _extractInProgress = false;
+                _extractTcs?.TrySetResult(false);
             }
         }
     }

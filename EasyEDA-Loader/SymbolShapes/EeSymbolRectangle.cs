@@ -9,12 +9,12 @@ namespace EasyEDA_Loader
             var parts = data.Split(new[] { "~" }, StringSplitOptions.None);
             return new EeSymbolRectangle
             {
-                PosX = double.Parse(parts[1]),
-                PosY = double.Parse(parts[2]),
+                PosX = EeShape.ParseDouble(parts[1]),
+                PosY = EeShape.ParseDouble(parts[2]),
                 Rx = ParseNullableDouble(parts[3]),
                 Ry = ParseNullableDouble(parts[4]),
-                Width = double.Parse(parts[5]),
-                Height = double.Parse(parts[6]),
+                Width = EeShape.ParseDouble(parts[5]),
+                Height = EeShape.ParseDouble(parts[6]),
                 StrokeColor = parts[7],
                 StrokeWidth = parts[8],
                 StrokeStyle = parts[9],

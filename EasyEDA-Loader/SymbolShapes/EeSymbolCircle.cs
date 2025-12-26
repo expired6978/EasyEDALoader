@@ -9,9 +9,9 @@ namespace EasyEDA_Loader
             var parts = data.Split(new[] { "~" }, StringSplitOptions.None);
             return new EeSymbolCircle
             {
-                CenterX = double.Parse(parts[0]),
-                CenterY = double.Parse(parts[1]),
-                Radius = double.Parse(parts[2]),
+                CenterX = EeShape.ParseDouble(parts[0]),
+                CenterY = EeShape.ParseDouble(parts[1]),
+                Radius = EeShape.ParseDouble(parts[2]),
                 StrokeColor = parts[3],
                 StrokeWidth = parts[4],
                 StrokeStyle = parts[5],
