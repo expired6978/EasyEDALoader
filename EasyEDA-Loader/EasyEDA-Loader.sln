@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasyEDA-Loader_AD25", "..\E
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Standalone_AD25", "..\Standalone_AD25\Standalone_AD25.csproj", "{92ABC413-242D-4B99-A25D-1CD27D99FA85}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasyEDA-LoaderNG", "..\EasyEDA-LoaderNG\EasyEDA-LoaderNG.csproj", "{0848CFC2-D002-5848-B2A5-4CF06E5DC981}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{92ABC413-242D-4B99-A25D-1CD27D99FA85}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{92ABC413-242D-4B99-A25D-1CD27D99FA85}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{92ABC413-242D-4B99-A25D-1CD27D99FA85}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0848CFC2-D002-5848-B2A5-4CF06E5DC981}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0848CFC2-D002-5848-B2A5-4CF06E5DC981}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0848CFC2-D002-5848-B2A5-4CF06E5DC981}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0848CFC2-D002-5848-B2A5-4CF06E5DC981}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

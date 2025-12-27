@@ -1,0 +1,98 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+
+  <PropertyGroup>
+	<TargetFramework>net6.0-windows</TargetFramework>
+	 <UseWindowsForms>true</UseWindowsForms>
+	<UseWPF>true</UseWPF>
+	<UseWindowsForms>true</UseWindowsForms>
+	  <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>  
+    <RootNamespace>EasyEDA_LoaderNG</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\EasyEDA-Loader\API\AltiumApi.cs" Link="AltiumApi.cs" />
+    <Compile Include="..\EasyEDA-Loader\API\EasyedaApi.cs" Link="EasyedaApi.cs" />
+    <Compile Include="..\EasyEDA-Loader\BaseForm.cs" Link="BaseForm.cs" />
+    <Compile Include="..\EasyEDA-Loader\Component.cs" Link="Component.cs" />
+    <Compile Include="..\EasyEDA-Loader\Dialog.cs" Link="Dialog.cs" />
+    <Compile Include="..\EasyEDA-Loader\EEPCB.cs" Link="EEPCB.cs" />
+    <Compile Include="..\EasyEDA-Loader\EESCH.cs" Link="EESCH.cs" />
+    <Compile Include="..\EasyEDA-Loader\FootprintData.cs" Link="FootprintData.cs" />
+    <Compile Include="..\EasyEDA-Loader\FootprintShapes\EeFootprint3dModel.cs" Link="EeFootprint3dModel.cs" />
+    <Compile Include="..\EasyEDA-Loader\FootprintShapes\EeFootprintArc.cs" Link="EeFootprintArc.cs" />
+    <Compile Include="..\EasyEDA-Loader\FootprintShapes\EeFootprintCircle.cs" Link="EeFootprintCircle.cs" />
+    <Compile Include="..\EasyEDA-Loader\FootprintShapes\EeFootprintHole.cs" Link="EeFootprintHole.cs" />
+    <Compile Include="..\EasyEDA-Loader\FootprintShapes\EeFootprintPad.cs" Link="EeFootprintPad.cs" />
+    <Compile Include="..\EasyEDA-Loader\FootprintShapes\EeFootprintRectangle.cs" Link="EeFootprintRectangle.cs" />
+    <Compile Include="..\EasyEDA-Loader\FootprintShapes\EeFootprintShape.cs" Link="EeFootprintShape.cs" />
+    <Compile Include="..\EasyEDA-Loader\FootprintShapes\EeFootprintText.cs" Link="EeFootprintText.cs" />
+    <Compile Include="..\EasyEDA-Loader\FootprintShapes\EeFootprintTrack.cs" Link="EeFootprintTrack.cs" />
+    <Compile Include="..\EasyEDA-Loader\FootprintShapes\EeFootprintVia.cs" Link="EeFootprintVia.cs" />
+    <Compile Include="..\EasyEDA-Loader\Shapes.cs" Link="Shapes.cs" />
+    <Compile Include="..\EasyEDA-Loader\SvgArcUtils.cs" Link="SvgArcUtils.cs" />
+    <Compile Include="..\EasyEDA-Loader\SymbolData.cs" Link="SymbolData.cs" />
+    <Compile Include="..\EasyEDA-Loader\SymbolDrawing.cs" Link="SymbolDrawing.cs" />
+    <Compile Include="..\EasyEDA-Loader\SymbolShapes\EeSymbolArc.cs" Link="EeSymbolArc.cs" />
+    <Compile Include="..\EasyEDA-Loader\SymbolShapes\EeSymbolCircle.cs" Link="EeSymbolCircle.cs" />
+    <Compile Include="..\EasyEDA-Loader\SymbolShapes\EeSymbolEllipse.cs" Link="EeSymbolEllipse.cs" />
+    <Compile Include="..\EasyEDA-Loader\SymbolShapes\EeSymbolPath.cs" Link="EeSymbolPath.cs" />
+    <Compile Include="..\EasyEDA-Loader\SymbolShapes\EeSymbolPin.cs" Link="EeSymbolPin.cs" />
+    <Compile Include="..\EasyEDA-Loader\SymbolShapes\EeSymbolPolygon.cs" Link="EeSymbolPolygon.cs" />
+    <Compile Include="..\EasyEDA-Loader\SymbolShapes\EeSymbolPolyline.cs" Link="EeSymbolPolyline.cs" />
+    <Compile Include="..\EasyEDA-Loader\SymbolShapes\EeSymbolRectangle.cs" Link="EeSymbolRectangle.cs" />
+    <Compile Include="..\EasyEDA-Loader\SymbolShapes\EeSymbolShape.cs" Link="EeSymbolShape.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.1" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3650.58" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="System.IO.Pipelines" Version="10.0.1" />
+    <PackageReference Include="System.Text.Encodings.Web" Version="10.0.1" />
+    <PackageReference Include="System.Text.Json" Version="10.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Altium.Controls">
+      <HintPath>..\EasyEDA-Loader\lib\AD25\Altium.Controls.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Altium.SDK">
+      <HintPath>..\EasyEDA-Loader\lib\AD25\Altium.SDK.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Altium.SDK.Interfaces">
+      <HintPath>..\EasyEDA-Loader\lib\AD25\Altium.SDK.Interfaces.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="DevExpress.Utils.v24.1">
+      <HintPath>..\EasyEDA-Loader\lib\AD25\DevExpress.Utils.v24.1.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="DevExpress.XtraEditors.v24.1">
+      <HintPath>..\EasyEDA-Loader\lib\AD25\DevExpress.XtraEditors.v24.1.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Update="C:\Users\Manu\.nuget\packages\microsoft.web.webview2\1.0.3650.58\buildTransitive\..\\lib_manual\netcoreapp3.0\Microsoft.Web.WebView2.Core.dll">
+      <Private>True</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Update="C:\Users\Manu\.nuget\packages\microsoft.web.webview2\1.0.3650.58\buildTransitive\..\\lib_manual\netcoreapp3.0\Microsoft.Web.WebView2.WinForms.dll">
+      <Private>True</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Update="C:\Users\Manu\.nuget\packages\microsoft.web.webview2\1.0.3650.58\buildTransitive\..\\lib_manual\net5.0-windows10.0.17763.0\Microsoft.Web.WebView2.Wpf.dll">
+      <Private>True</Private>
+    </Reference>
+  </ItemGroup>
+
+</Project>

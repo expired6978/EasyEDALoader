@@ -87,5 +87,46 @@ namespace EasyEDA_Loader
         {
             return EDP.Utils.MilsToCoord(value);
         }
+
+        public static string GetActiveProjectPath()
+        {
+            try
+            {
+                IClient client = GlobalVars.Client;
+                if (client == null) return string.Empty;
+
+                IServerDocumentView currentView = client.GetCurrentView();
+
+                if (currentView != null && currentView.GetOwnerDocument() != null)
+                {
+                    string fullPath = currentView.GetOwnerDocument().GetFileName();
+
+                    if (!string.IsNullOrEmpty(fullPath))
+                    {
+                        string baseDir = System.IO.Path.GetDirectoryName(fullPath) ?? string.Empty;
+
+                        if (!string.IsNullOrEmpty(baseDir))
+                        {
+                            // On définit le chemin du sous-dossier
+                            string datasheetDir = System.IO.Path.Combine(baseDir, "Datasheets");
+
+                            // On crée le répertoire s'il n'existe pas
+                            if (!System.IO.Directory.Exists(datasheetDir))
+                            {
+                                System.IO.Directory.CreateDirectory(datasheetDir);
+                            }
+
+                            return datasheetDir;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("Erreur Dossier Datasheet: " + ex.Message);
+            }
+            return string.Empty;
+        }
+
     }
 }
