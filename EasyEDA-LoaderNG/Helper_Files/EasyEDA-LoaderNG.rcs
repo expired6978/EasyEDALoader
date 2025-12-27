@@ -1,0 +1,44 @@
+PL
+    EasyEDA-LoaderNG:EasyEDARunNG
+    Command='EasyEDA-LoaderNG:EasyEDARunNG'
+    Caption='LCSC_Search'
+    Image=''
+    Shortcut1=''
+    Shortcut2=''
+    Params=''
+    Description='Browse LCSC and import EasyEDA components'
+End
+
+Insertion _User1 TargetID='MNNoDocument_File' RefID0='NoDoc' 
+    Link _User2 PLID='EasyEDA-LoaderNG:EasyEDARunNG'      End
+End
+Insertion _User3 TargetID='MNSchematic_File' RefID0='SchDoc_File' 
+    Link _User4 PLID='EasyEDA-LoaderNG:EasyEDARunNG'      End
+End
+Insertion _User5 TargetID='MNSchematic_Tools10' RefID0='SchDoc_Tools' 
+    Link _User6 PLID='EasyEDA-LoaderNG:EasyEDARunNG'      End
+End
+Insertion _User7 TargetID='MNSchematic_SchLibMenu10' RefID0='SchLib_File' 
+    Link _User8 PLID='EasyEDA-LoaderNG:EasyEDARunNG'      End
+End
+Insertion _User9 TargetID='MNSchematic_SchLibMenuTools10' RefID0='SchLib_Tools' 
+    Link _User10 PLID='EasyEDA-LoaderNG:EasyEDARunNG'      End
+End
+Insertion _User11 TargetID='MNPCBLib_10' RefID0='PcbLib_File' 
+    Link _User12 PLID='EasyEDA-LoaderNG:EasyEDARunNG'      End
+End
+Insertion _User13 TargetID='MNPCBLib_Tools10' RefID0='PcbLib_Tools' 
+    Link _User14 PLID='EasyEDA-LoaderNG:EasyEDARunNG'      End
+End
+Insertion _User15 TargetID='MNPCB_File' RefID0='PcbDoc_File' 
+    Link _User16 PLID='EasyEDA-LoaderNG:EasyEDARunNG'      End
+End
+Insertion _User17 TargetID='MNPCB_Tools10' RefID0='PcbDoc_Tools' 
+    Link _User18 PLID='EasyEDA-LoaderNG:EasyEDARunNG'      End
+End
+Insertion _User19 TargetID='MNSchematicMenu' InsertType='After' RefID0='MNSchematic_Help10' 
+    Link _User20 PLID='EasyEDA-LoaderNG:EasyEDARunNG'      End
+End
+Insertion _User21 TargetID='MNPCBMenu' InsertType='After' RefID0='MNPCB_Help10' 
+    Link _User22 PLID='EasyEDA-LoaderNG:EasyEDARunNG'      End
+End

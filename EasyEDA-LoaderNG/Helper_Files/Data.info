@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ASR_Product xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+  <!-- ⚠️ GUID conservés volontairement pour la phase de test -->
+  <Guid xmlns="http://tempuri.org/">8035C261-E5FE-403B-A9B5-9ABFFB6E0EF5</Guid>
+
+  <!-- Identité NG -->
+  <HRID xmlns="http://tempuri.org/">EasyEDA-LoaderNG</HRID>
+  <TechnologyName xmlns="http://tempuri.org/">EasyEDA-LoaderNG</TechnologyName>
+
+  <ProductLineGuid xmlns="http://tempuri.org/">09D0A56F-4AC4-4159-9D7F-CE64A7A29346</ProductLineGuid>
+  <ItemGuid xmlns="http://tempuri.org/">AD7D51C6-78CE-472B-9C43-21209B829352</ItemGuid>
+  <CategoryGuid xmlns="http://tempuri.org/">793A1F67-0B22-4E01-A5DE-3176A1E8C60D</CategoryGuid>
+
+  <DistributionLevel xmlns="http://tempuri.org/">Full</DistributionLevel>
+  <LicensingMode xmlns="http://tempuri.org/">0</LicensingMode>
+
+  <PublisherGuid xmlns="http://tempuri.org/">639FDAE2-AD32-4BD1-AD14-55C9A6F75617</PublisherGuid>
+  <PublisherName xmlns="http://tempuri.org/">Expired</PublisherName>
+  <OwnProduct xmlns="http://tempuri.org/">false</OwnProduct>
+
+  <Versions xmlns="http://tempuri.org/">
+    <ASR_ProductVersion>
+      <Guid>7042BC82-F870-462D-86AF-B158AC75C490</Guid>
+
+      <Version>0.1.0.0</Version>
+      <Title>EasyEDA-LoaderNG</Title>
+      <ShortDescription>EasyEDA Loader Next Generation</ShortDescription>
+      <LongDescription>
+        Next generation EasyEDA Loader with integrated LCSC browser.
+        Experimental version.
+      </LongDescription>
+
+      <ReadMe />
+      <Keywords>EasyEDA LCSC WebView</Keywords>
+      <Help />
+      <ReleaseNotes />
+      <ReleaseDate>2025-01-01T00:00:00Z</ReleaseDate>
+
+      <URL />
+      <Status>published</Status>
+
+      <ProductGuid>D09E0235-1A97-43E9-AAA3-D88E090C7490</ProductGuid>
+      <RevisionGuid>661BBAFE-FE4A-40DC-8A19-D95A128C7EEF</RevisionGuid>
+      <LifeCycleStateGuid>B4D29A9A-68F9-4531-9899-33186E4F21B3</LifeCycleStateGuid>
+
+      <AltiumUpdate>false</AltiumUpdate>
+      <PublisherName>Expired</PublisherName>
+      <IsBreak>false</IsBreak>
+
+      <PlatformVersion>
+        <records>
+          <ASR_Platform>
+            <Name>DXP</Name>
+            <Value>1.0.16.41</Value>
+          </ASR_Platform>
+          <ASR_Platform>
+            <Name>EDP</Name>
+            <Value>10.0.16.41</Value>
+          </ASR_Platform>
+        </records>
+      </PlatformVersion>
+
+      <Resources />
+      <Platform>p64bit</Platform>
+      <Branch />
+    </ASR_ProductVersion>
+  </Versions>
+
+  <PermissionSetGuids xmlns="http://tempuri.org/" />
+  <TrialPermissionSetGuid xmlns="http://tempuri.org/" />
+  <PromotionUrl xmlns="http://tempuri.org/">http://</PromotionUrl>
+  <ProductLines xmlns="http://tempuri.org/" />
+
+</ASR_Product>

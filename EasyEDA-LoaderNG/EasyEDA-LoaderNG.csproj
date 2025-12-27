@@ -1,15 +1,25 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
 
-  <PropertyGroup>
-	<TargetFramework>net6.0-windows</TargetFramework>
-	 <UseWindowsForms>true</UseWindowsForms>
-	<UseWPF>true</UseWPF>
-	<UseWindowsForms>true</UseWindowsForms>
-	  <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>  
-    <RootNamespace>EasyEDA_LoaderNG</RootNamespace>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net6.0-windows</TargetFramework>
+		<UseWindowsForms>true</UseWindowsForms>
+		<UseWPF>true</UseWPF>
+		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+		<RootNamespace>EasyEDA_LoaderNG</RootNamespace>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+
+		<GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+		<AssemblyName>EasyEDA-LoaderNG</AssemblyName>
+		<Title>EasyEDA-LoaderNG</Title>
+		<Product>EasyEDA-LoaderNG</Product>
+		<Company>Manu</Company>
+		<Copyright>Copyright © 2025</Copyright>
+		<AssemblyVersion>1.0.0.0</AssemblyVersion>
+		<FileVersion>1.0.0.0</FileVersion>
+
+		<Guid>6fe3a9e3-36f1-4b94-967e-772357d2c44f</Guid>
+	</PropertyGroup>
 
   <ItemGroup>
     <Compile Include="..\EasyEDA-Loader\API\AltiumApi.cs" Link="AltiumApi.cs" />
@@ -77,22 +87,31 @@
     </Reference>
   </ItemGroup>
 
-  <ItemGroup>
-    <Reference Update="C:\Users\Manu\.nuget\packages\microsoft.web.webview2\1.0.3650.58\buildTransitive\..\\lib_manual\netcoreapp3.0\Microsoft.Web.WebView2.Core.dll">
-      <Private>True</Private>
-    </Reference>
-  </ItemGroup>
+	<ItemGroup>
+		<Reference Include="Microsoft.Web.WebView2.Core">
+			<Private>True</Private>
+		</Reference>
+		<Reference Include="Microsoft.Web.WebView2.WinForms">
+			<Private>True</Private>
+		</Reference>
+		<Reference Include="Microsoft.Web.WebView2.Wpf">
+			<Private>True</Private>
+		</Reference>
+	</ItemGroup>
 
-  <ItemGroup>
-    <Reference Update="C:\Users\Manu\.nuget\packages\microsoft.web.webview2\1.0.3650.58\buildTransitive\..\\lib_manual\netcoreapp3.0\Microsoft.Web.WebView2.WinForms.dll">
-      <Private>True</Private>
-    </Reference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Update="C:\Users\Manu\.nuget\packages\microsoft.web.webview2\1.0.3650.58\buildTransitive\..\\lib_manual\net5.0-windows10.0.17763.0\Microsoft.Web.WebView2.Wpf.dll">
-      <Private>True</Private>
-    </Reference>
-  </ItemGroup>
+	<ItemGroup>
+	  <None Update="Helper_Files\Data.info">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Update="Helper_Files\EasyEDA-LoaderNG.Ins">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Update="Helper_Files\EasyEDA-LoaderNG.rcs">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Update="Helper_Files\Readme.txt">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	</ItemGroup>
 
 </Project>
