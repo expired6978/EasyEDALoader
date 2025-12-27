@@ -254,6 +254,7 @@ namespace EasyEDA_LoaderNG
 
             string componentId = match.Value;
 
+            // UI Feedback Initialization
             _btnImportLib.Enabled = false;
             _progressBar.Visible = true;
             _lblStatus.Visible = true;
@@ -261,10 +262,24 @@ namespace EasyEDA_LoaderNG
 
             try
             {
+                // ---------------------------------------------------------
+                // 1. PROJECT PATH ANALYSIS
+                // ---------------------------------------------------------
                 _lblStatus.Text = "Analyzing Altium project path...";
                 string baseDirectory = AltiumApi.GetActiveProjectPath();
-                if (baseDirectory.EndsWith("Datasheets")) baseDirectory = Path.GetDirectoryName(baseDirectory) ?? baseDirectory;
-                if (string.IsNullOrEmpty(baseDirectory)) baseDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "AltiumEE");
+
+                if (!string.IsNullOrEmpty(baseDirectory) && baseDirectory.EndsWith("Datasheets"))
+                    baseDirectory = Path.GetDirectoryName(baseDirectory) ?? baseDirectory;
+
+                if (string.IsNullOrEmpty(baseDirectory))
+                {
+                    baseDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "AltiumEE");
+                    Helper.Log($"[PIPELINE] Project not detected, using fallback: {baseDirectory}");
+                }
+                else
+                {
+                    Helper.Log($"[PIPELINE] Target Project Directory: {baseDirectory}");
+                }
 
                 string libraryFolder = Path.Combine(baseDirectory, "Library");
                 if (!Directory.Exists(libraryFolder)) Directory.CreateDirectory(libraryFolder);
@@ -272,51 +287,108 @@ namespace EasyEDA_LoaderNG
                 string pcbLibraryPath = Path.Combine(libraryFolder, "EasyEDA.pcblib");
                 string schLibraryPath = Path.Combine(libraryFolder, "EasyEDA.schlib");
 
+                Helper.Log($"[PIPELINE] SCH Lib Path: {schLibraryPath}");
+
                 var currentDoc = AltiumApi.GlobalVars.Client.GetCurrentView()?.GetOwnerDocument();
                 if (currentDoc == null) throw new Exception("No active Altium document found.");
 
+                // ---------------------------------------------------------
+                // 2. FETCH EASYEDA DATA
+                // ---------------------------------------------------------
                 _lblStatus.Text = $"Downloading EasyEDA data ({componentId})...";
                 var cts = new CancellationTokenSource();
                 var api = new EasyedaApi();
                 var root = await api.GetComponentJsonAsync(componentId, cts.Token);
-                if (root?.Component == null) throw new Exception("EasyEDA data not found.");
+                if (root?.Component == null) throw new Exception("EasyEDA component data not found.");
 
                 var comp = root.Component;
                 var ee_footprint = comp.PackageDetail.Footprint;
                 var ee_symbol = comp.Symbol;
                 string package = ee_footprint.Head.Parameters.Package;
 
-                _lblStatus.Text = $"Generating PCB Footprint: {package}...";
+                // ---------------------------------------------------------
+                // 3. PCB FOOTPRINT PROCESSING
+                // ---------------------------------------------------------
                 var pcbDocument = AltiumApi.GlobalVars.Client.OpenDocument("PcbLib", pcbLibraryPath);
                 AltiumApi.GlobalVars.Client.ShowDocument(pcbDocument);
                 var pcbLib = AltiumApi.GlobalVars.PCBServer.GetCurrentPCBLibrary();
 
                 if (pcbLib.GetComponentByName(package) == null)
                 {
+                    _lblStatus.Text = $"Generating PCB Footprint: {package}...";
+                    Helper.Log($"[PCB] Creating new footprint: {package}");
+
                     var model = ee_footprint.GetModel();
                     byte[] rawModelData = model != null ? await api.LoadRawModelAsync(model.Uuid, cts.Token) : null;
+
                     var libComp = EEPCB.CreateFootprintInLib(package, comp.PackageDetail.Title);
                     AltiumApi.GlobalVars.PCBServer.PreProcess();
-                    ee_footprint.AddToComponent(libComp, new EeFootprintContext { Box = ee_footprint.BoundingBox, Layers = ee_footprint.Layers, RawModelTask = Task.FromResult(rawModelData) });
+                    var fpCtx = new EeFootprintContext
+                    {
+                        Box = ee_footprint.BoundingBox,
+                        Layers = ee_footprint.Layers,
+                        RawModelTask = Task.FromResult(rawModelData)
+                    };
+                    ee_footprint.AddToComponent(libComp, fpCtx);
                     AltiumApi.GlobalVars.PCBServer.PostProcess();
                     pcbDocument.DoFileSave("PcbLib");
                 }
-
-                _lblStatus.Text = $"Generating SCH Symbol: {ee_symbol.Head.Parameters.Name}...";
-                var schDocument = AltiumApi.GlobalVars.Client.OpenDocument("SchLib", schLibraryPath);
-                AltiumApi.GlobalVars.Client.ShowDocument(schDocument);
-                var productInfo = await api.GetProductInfoAsync(componentId, comp.Owner.Uuid);
-                string partName = ee_symbol.Head.Parameters.Name;
-
-                (var schLib, var component) = EESCH.CreateComponentInLib(partName, productInfo?.Description ?? partName, ee_symbol.Head.Parameters.Pre);
-                if (schLib != null && component != null)
+                else
                 {
-                    SymbolDrawing.CreateComponent(schLib, component, pcbLibraryPath, package, ee_symbol);
-                    if (productInfo?.Parameters != null)
-                        foreach (var kvp in productInfo.Parameters) if (!string.IsNullOrEmpty(kvp.Key)) EESCH.AddParameter(component, kvp.Key, kvp.Value ?? "");
-                    schDocument.DoFileSave("SchLib");
+                    Helper.Log($"[PCB] Footprint {package} already exists. Skipping.");
                 }
 
+                // ---------------------------------------------------------
+                // 4. SCH SYMBOL PROCESSING (Secure Check)
+                // ---------------------------------------------------------
+                var schDocument = AltiumApi.GlobalVars.Client.OpenDocument("SchLib", schLibraryPath);
+                AltiumApi.GlobalVars.Client.ShowDocument(schDocument);
+
+                string partName = ee_symbol.Head.Parameters.Name;
+                Helper.Log($"[SCH CHECK] Checking for '{partName}' in library...");
+
+                SCH.ISch_Component existingSchComp = null;
+                try
+                {
+                    // On tente de charger le composant depuis la librairie disque
+                    existingSchComp = AltiumApi.GlobalVars.SCHServer.LoadComponentFromLibrary(partName, schLibraryPath);
+                }
+                catch (Exception checkEx)
+                {
+                    Helper.Log($"[SCH CHECK] Warning during check: {checkEx.Message}. Assuming not found.");
+                    existingSchComp = null;
+                }
+
+                if (existingSchComp == null)
+                {
+                    _lblStatus.Text = $"Generating SCH Symbol: {partName}...";
+                    Helper.Log($"[SCH CHECK] Component not found. CREATING: {partName}");
+
+                    var productInfo = await api.GetProductInfoAsync(componentId, comp.Owner.Uuid);
+
+                    (var lib, var component) = EESCH.CreateComponentInLib(partName, productInfo?.Description ?? partName, ee_symbol.Head.Parameters.Pre);
+
+                    if (lib != null && component != null)
+                    {
+                        SymbolDrawing.CreateComponent(lib, component, pcbLibraryPath, package, ee_symbol);
+                        if (productInfo?.Parameters != null)
+                        {
+                            foreach (var kvp in productInfo.Parameters)
+                                if (!string.IsNullOrEmpty(kvp.Key)) EESCH.AddParameter(component, kvp.Key, kvp.Value ?? "");
+                        }
+                        schDocument.DoFileSave("SchLib");
+                        Helper.Log($"[SCH] Save completed for {partName}");
+                    }
+                }
+                else
+                {
+                    _lblStatus.Text = $"Symbol {partName} already exists. Skipping.";
+                    Helper.Log($"[SCH CHECK] Component FOUND. Skipping creation for {partName}");
+                }
+
+                // ---------------------------------------------------------
+                // 5. FINALIZE AND PLACE
+                // ---------------------------------------------------------
                 _lblStatus.Text = "Finalizing and placing component...";
                 AltiumApi.GlobalVars.Client.ShowDocument(currentDoc);
                 AltiumApi.GlobalVars.Client.CloseDocument(pcbDocument);
@@ -328,6 +400,7 @@ namespace EasyEDA_LoaderNG
                 newComponent.MoveToXY(0, 0);
                 currentSheet.GraphicallyInvalidate();
 
+                Helper.Log($"[PIPELINE] SUCCESS: {partName} imported and placed.");
                 this.Close();
             }
             catch (Exception ex)
@@ -336,7 +409,9 @@ namespace EasyEDA_LoaderNG
                 _progressBar.Visible = false;
                 _lblStatus.Visible = false;
                 _btnImportLib.Enabled = true;
-                MessageBox.Show($"Import Error: {ex.Message}", "EasyEDA-LoaderNG", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+                Helper.Log($"[ERROR] Pipeline Failed: {ex.Message}\nStack: {ex.StackTrace}");
+                MessageBox.Show($"Import failed:\n{ex.Message}", "EasyEDA-LoaderNG", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
     }

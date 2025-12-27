@@ -114,4 +114,8 @@
 	  </None>
 	</ItemGroup>
 
+	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+	  <Exec Command="copy /Y &quot;$(TargetPath)&quot; &quot;C:\ProgramData\Altium\Altium Designer {778F3BD3-0BF2-4ED3-98F3-AB7A9ADB5120}\Extensions\EasyEDA-LoaderNG\&quot;" />
+	</Target>
+
 </Project>
