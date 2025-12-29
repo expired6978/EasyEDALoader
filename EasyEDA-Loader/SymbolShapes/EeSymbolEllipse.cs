@@ -9,10 +9,10 @@ namespace EasyEDA_Loader
             var parts = data.Split(new[] { "~" }, StringSplitOptions.None);
             return new EeSymbolEllipse
             {
-                CenterX = double.Parse(parts[1]),
-                CenterY = double.Parse(parts[2]),
-                RadiusX = double.Parse(parts[3]),
-                RadiusY = double.Parse(parts[4]),
+                CenterX = EeShape.ParseDouble(parts[1]),
+                CenterY = EeShape.ParseDouble(parts[2]),
+                RadiusX = EeShape.ParseDouble(parts[3]),
+                RadiusY = EeShape.ParseDouble(parts[4]),
                 StrokeColor = parts[5],
                 StrokeWidth = parts[6],
                 StrokeStyle = parts[7],

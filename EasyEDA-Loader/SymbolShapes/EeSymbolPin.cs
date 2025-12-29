@@ -44,7 +44,7 @@ namespace EasyEDA_Loader
             if (!string.IsNullOrWhiteSpace(fontSize) && fontSize.Contains("pt"))
             {
                 var cleaned = fontSize.Replace("pt", "");
-                if (double.TryParse(cleaned, out double result))
+                if (double.TryParse(cleaned.Replace(',', '.'), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double result))
                     return result;
             }
 
@@ -78,16 +78,16 @@ namespace EasyEDA_Loader
                     IsDisplayed = ParseDisplay(ee_segments[0][1]),
                     Type = (EasyedaPinType)ParseInt(ee_segments[0][2]),
                     SpicePinNumber = ee_segments[0][3],
-                    PosX = double.Parse(ee_segments[0][4]),
-                    PosY = double.Parse(ee_segments[0][5]),
+                    PosX = EeShape.ParseDouble(ee_segments[0][4]),
+                    PosY = EeShape.ParseDouble(ee_segments[0][5]),
                     Rotation = ParseInt(ee_segments[0][6]),
                     Id = ee_segments[0][7],
                     IsLocked = ParseBoolean(ee_segments[0][8]),
                 },
                 PinDot = new EeSymbolPinDot
                 {
-                    DotX = double.Parse(ee_segments[1][0]),
-                    DotY = double.Parse(ee_segments[1][1])
+                    DotX = EeShape.ParseDouble(ee_segments[1][0]),
+                    DotY = EeShape.ParseDouble(ee_segments[1][1])
                 },
                 PinPath = new EeSymbolPinPath
                 {
@@ -97,8 +97,8 @@ namespace EasyEDA_Loader
                 Name = new EeSymbolPinName
                 {
                     IsDisplayed = ParseDisplay(ee_segments[3][0]),
-                    PosX = double.Parse(ee_segments[3][1]),
-                    PosY = double.Parse(ee_segments[3][2]),
+                    PosX = EeShape.ParseDouble(ee_segments[3][1]),
+                    PosY = EeShape.ParseDouble(ee_segments[3][2]),
                     Rotation = ParseInt(ee_segments[3][3]),
                     Text = ee_segments[3][4],
                     TextAnchor = ee_segments[3][5],
@@ -109,8 +109,8 @@ namespace EasyEDA_Loader
                 Dot = new EeSymbolPinDotBis
                 {
                     IsDisplayed = ParseDisplay(ee_segments[5][0]),
-                    CircleX = double.Parse(ee_segments[5][1]),
-                    CircleY = double.Parse(ee_segments[5][2]),
+                    CircleX = EeShape.ParseDouble(ee_segments[5][1]),
+                    CircleY = EeShape.ParseDouble(ee_segments[5][2]),
                 },
                 Clock = new EeSymbolPinClock
                 {

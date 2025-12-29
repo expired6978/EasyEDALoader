@@ -87,5 +87,31 @@ namespace EasyEDA_Loader
         {
             return EDP.Utils.MilsToCoord(value);
         }
+
+        public static string GetActiveProjectPath()
+        {
+            try
+            {
+                IClient client = GlobalVars.Client;
+                if (client == null) return string.Empty;
+
+                IServerDocumentView currentView = client.GetCurrentView();
+                if (currentView != null && currentView.GetOwnerDocument() != null)
+                {
+                    string fullPath = currentView.GetOwnerDocument().GetFileName();
+                    if (!string.IsNullOrEmpty(fullPath))
+                    {
+                        // On renvoie UNIQUEMENT le dossier parent du document actif
+                        return System.IO.Path.GetDirectoryName(fullPath) ?? string.Empty;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("Erreur GetActiveProjectPath: " + ex.Message);
+            }
+            return string.Empty;
+        }
+
     }
 }

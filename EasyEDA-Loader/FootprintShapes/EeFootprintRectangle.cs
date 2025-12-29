@@ -15,11 +15,11 @@ namespace EasyEDA_Loader
             var parts = data.Split(new[] { "~" }, StringSplitOptions.None);
             return new EeFootprintRectangle
             {
-                X = ConvertToMM(double.Parse(parts[1])),
-                Y = ConvertToMM(double.Parse(parts[2])),
-                Width = ConvertToMM(double.Parse(parts[3])),
-                Height = ConvertToMM(double.Parse(parts[4])),
-                StrokeWidth = ConvertToMM(double.Parse(parts[5])),
+                X = ConvertToMM(EeShape.ParseDouble(parts[1])),
+                Y = ConvertToMM(EeShape.ParseDouble(parts[2])),
+                Width = ConvertToMM(EeShape.ParseDouble(parts[3])),
+                Height = ConvertToMM(EeShape.ParseDouble(parts[4])),
+                StrokeWidth = ConvertToMM(EeShape.ParseDouble(parts[5])),
                 Id = parts[6],
                 LayerId = parts[7],
                 IsLocked = ParseBoolean(parts[8]),

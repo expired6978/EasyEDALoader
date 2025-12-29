@@ -1,10 +1,6 @@
 ﻿using PCB;
 using System;
 using System.Collections.Generic;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Media;
-using System.Windows.Shapes;
 
 namespace EasyEDA_Loader
 {
@@ -15,48 +11,69 @@ namespace EasyEDA_Loader
             var parts = data.Split(new[] { "~" }, StringSplitOptions.None);
             return new EeFootprintCircle
             {
-                Cx = ConvertToMM(double.Parse(parts[1])),
-                Cy = ConvertToMM(double.Parse(parts[2])),
-                Radius = ConvertToMM(double.Parse(parts[3])),
-                StrokeWidth = ConvertToMM(double.Parse(parts[4])),
+                Cx = ConvertToMM(EeShape.ParseDouble(parts[1])),
+                Cy = ConvertToMM(EeShape.ParseDouble(parts[2])),
+                Radius = ConvertToMM(EeShape.ParseDouble(parts[3])),
+                StrokeWidth = ConvertToMM(EeShape.ParseDouble(parts[4])),
                 LayerId = parts[5],
                 Id = parts[6],
                 IsLocked = ParseBoolean(parts[7]),
             };
         }
-        public override List<UIElement> AddToCanvas(Canvas c, EeFootprintContext ctx)
+
+        public override List<System.Windows.UIElement> AddToCanvas(
+            System.Windows.Controls.Canvas c,
+            EeFootprintContext ctx)
         {
             var box = ctx.Box;
-            Point startPoint = new Point(Cx - box.X + Radius, Cy - box.Y);
-            Point midPoint = new Point(Cx - Radius - box.X, Cy - box.Y);
-            Point endPoint = new Point(Cx + Radius - box.X, Cy - box.Y);
-            return new List<UIElement>{new Path
+
+            var startPoint = new System.Windows.Point(
+                Cx - box.X + Radius,
+                Cy - box.Y
+            );
+
+            var midPoint = new System.Windows.Point(
+                Cx - Radius - box.X,
+                Cy - box.Y
+            );
+
+            var endPoint = new System.Windows.Point(
+                Cx + Radius - box.X,
+                Cy - box.Y
+            );
+
+            return new List<System.Windows.UIElement>
+            {
+                new System.Windows.Shapes.Path
                 {
-                    Stroke = new SolidColorBrush(ColorHelper.FromHex(ctx.Layers.GetLayerColor(LayerId))),
+                    Stroke = new System.Windows.Media.SolidColorBrush(
+                        ColorHelper.FromHex(ctx.Layers.GetLayerColor(LayerId))
+                    ),
                     StrokeThickness = StrokeWidth,
-                    Data = new PathGeometry
+                    Data = new System.Windows.Media.PathGeometry
                     {
-                        Figures = {
-                            new PathFigure
+                        Figures = new System.Windows.Media.PathFigureCollection
+                        {
+                            new System.Windows.Media.PathFigure
                             {
                                 StartPoint = startPoint,
-                                Segments = new PathSegmentCollection
+                                Segments = new System.Windows.Media.PathSegmentCollection
                                 {
-                                    new ArcSegment
+                                    new System.Windows.Media.ArcSegment
                                     {
                                         Point = midPoint,
-                                        Size = new Size(Radius, Radius),
+                                        Size = new System.Windows.Size(Radius, Radius),
                                         RotationAngle = 0,
                                         IsLargeArc = false,
-                                        SweepDirection = SweepDirection.Clockwise
+                                        SweepDirection = System.Windows.Media.SweepDirection.Clockwise
                                     },
-                                    new ArcSegment
+                                    new System.Windows.Media.ArcSegment
                                     {
                                         Point = endPoint,
-                                        Size = new Size(Radius, Radius),
+                                        Size = new System.Windows.Size(Radius, Radius),
                                         RotationAngle = 0,
                                         IsLargeArc = false,
-                                        SweepDirection = SweepDirection.Clockwise
+                                        SweepDirection = System.Windows.Media.SweepDirection.Clockwise
                                     }
                                 },
                                 IsClosed = false
@@ -66,6 +83,7 @@ namespace EasyEDA_Loader
                 }
             };
         }
+
         public override bool AddToComponent(IPCB_LibComponent c, EeFootprintContext ctx)
         {
             TLayerConstant targetLayer;
@@ -76,7 +94,17 @@ namespace EasyEDA_Loader
                 {
                     targetLayer = EEPCB.EELayerToAltium(layer.Name);
 
-                    var arc = EEPCB.CreateArc(c, targetLayer, ConvertX(Cx, ctx), ConvertY(Cy, ctx), Radius, StrokeWidth, 0, 360);
+                    var arc = EEPCB.CreateArc(
+                        c,
+                        targetLayer,
+                        ConvertX(Cx, ctx),
+                        ConvertY(Cy, ctx),
+                        Radius,
+                        StrokeWidth,
+                        0,
+                        360
+                    );
+
                     if (arc != null)
                     {
                         EEPCB.AddToPCB(c, arc);
@@ -92,6 +120,7 @@ namespace EasyEDA_Loader
             }
             return true;
         }
+
         public double Cx { get; set; }
         public double Cy { get; set; }
         public double Radius { get; set; }
@@ -100,5 +129,4 @@ namespace EasyEDA_Loader
         public string Id { get; set; }
         public bool IsLocked { get; set; }
     }
-
 }

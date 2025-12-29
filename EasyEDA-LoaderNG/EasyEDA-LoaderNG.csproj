@@ -1,0 +1,121 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+
+	<PropertyGroup>
+		<TargetFramework>net6.0-windows</TargetFramework>
+		<UseWindowsForms>true</UseWindowsForms>
+		<UseWPF>true</UseWPF>
+		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+		<RootNamespace>EasyEDA_LoaderNG</RootNamespace>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+
+		<GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+		<AssemblyName>EasyEDA-LoaderNG</AssemblyName>
+		<Title>EasyEDA-LoaderNG</Title>
+		<Product>EasyEDA-LoaderNG</Product>
+		<Company>Manu</Company>
+		<Copyright>Copyright © 2025</Copyright>
+		<AssemblyVersion>1.0.0.0</AssemblyVersion>
+		<FileVersion>1.0.0.0</FileVersion>
+
+		<Guid>6fe3a9e3-36f1-4b94-967e-772357d2c44f</Guid>
+	</PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\EasyEDA-Loader\API\AltiumApi.cs" Link="AltiumApi.cs" />
+    <Compile Include="..\EasyEDA-Loader\API\EasyedaApi.cs" Link="EasyedaApi.cs" />
+    <Compile Include="..\EasyEDA-Loader\BaseForm.cs" Link="BaseForm.cs" />
+    <Compile Include="..\EasyEDA-Loader\Component.cs" Link="Component.cs" />
+    <Compile Include="..\EasyEDA-Loader\Dialog.cs" Link="Dialog.cs" />
+    <Compile Include="..\EasyEDA-Loader\EEPCB.cs" Link="EEPCB.cs" />
+    <Compile Include="..\EasyEDA-Loader\EESCH.cs" Link="EESCH.cs" />
+    <Compile Include="..\EasyEDA-Loader\FootprintData.cs" Link="FootprintData.cs" />
+    <Compile Include="..\EasyEDA-Loader\FootprintShapes\EeFootprint3dModel.cs" Link="EeFootprint3dModel.cs" />
+    <Compile Include="..\EasyEDA-Loader\FootprintShapes\EeFootprintArc.cs" Link="EeFootprintArc.cs" />
+    <Compile Include="..\EasyEDA-Loader\FootprintShapes\EeFootprintCircle.cs" Link="EeFootprintCircle.cs" />
+    <Compile Include="..\EasyEDA-Loader\FootprintShapes\EeFootprintHole.cs" Link="EeFootprintHole.cs" />
+    <Compile Include="..\EasyEDA-Loader\FootprintShapes\EeFootprintPad.cs" Link="EeFootprintPad.cs" />
+    <Compile Include="..\EasyEDA-Loader\FootprintShapes\EeFootprintRectangle.cs" Link="EeFootprintRectangle.cs" />
+    <Compile Include="..\EasyEDA-Loader\FootprintShapes\EeFootprintShape.cs" Link="EeFootprintShape.cs" />
+    <Compile Include="..\EasyEDA-Loader\FootprintShapes\EeFootprintText.cs" Link="EeFootprintText.cs" />
+    <Compile Include="..\EasyEDA-Loader\FootprintShapes\EeFootprintTrack.cs" Link="EeFootprintTrack.cs" />
+    <Compile Include="..\EasyEDA-Loader\FootprintShapes\EeFootprintVia.cs" Link="EeFootprintVia.cs" />
+    <Compile Include="..\EasyEDA-Loader\Shapes.cs" Link="Shapes.cs" />
+    <Compile Include="..\EasyEDA-Loader\SvgArcUtils.cs" Link="SvgArcUtils.cs" />
+    <Compile Include="..\EasyEDA-Loader\SymbolData.cs" Link="SymbolData.cs" />
+    <Compile Include="..\EasyEDA-Loader\SymbolDrawing.cs" Link="SymbolDrawing.cs" />
+    <Compile Include="..\EasyEDA-Loader\SymbolShapes\EeSymbolArc.cs" Link="EeSymbolArc.cs" />
+    <Compile Include="..\EasyEDA-Loader\SymbolShapes\EeSymbolCircle.cs" Link="EeSymbolCircle.cs" />
+    <Compile Include="..\EasyEDA-Loader\SymbolShapes\EeSymbolEllipse.cs" Link="EeSymbolEllipse.cs" />
+    <Compile Include="..\EasyEDA-Loader\SymbolShapes\EeSymbolPath.cs" Link="EeSymbolPath.cs" />
+    <Compile Include="..\EasyEDA-Loader\SymbolShapes\EeSymbolPin.cs" Link="EeSymbolPin.cs" />
+    <Compile Include="..\EasyEDA-Loader\SymbolShapes\EeSymbolPolygon.cs" Link="EeSymbolPolygon.cs" />
+    <Compile Include="..\EasyEDA-Loader\SymbolShapes\EeSymbolPolyline.cs" Link="EeSymbolPolyline.cs" />
+    <Compile Include="..\EasyEDA-Loader\SymbolShapes\EeSymbolRectangle.cs" Link="EeSymbolRectangle.cs" />
+    <Compile Include="..\EasyEDA-Loader\SymbolShapes\EeSymbolShape.cs" Link="EeSymbolShape.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.1" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3650.58" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="System.IO.Pipelines" Version="10.0.1" />
+    <PackageReference Include="System.Text.Encodings.Web" Version="10.0.1" />
+    <PackageReference Include="System.Text.Json" Version="10.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Altium.Controls">
+      <HintPath>..\EasyEDA-Loader\lib\AD25\Altium.Controls.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Altium.SDK">
+      <HintPath>..\EasyEDA-Loader\lib\AD25\Altium.SDK.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Altium.SDK.Interfaces">
+      <HintPath>..\EasyEDA-Loader\lib\AD25\Altium.SDK.Interfaces.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="DevExpress.Utils.v24.1">
+      <HintPath>..\EasyEDA-Loader\lib\AD25\DevExpress.Utils.v24.1.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="DevExpress.XtraEditors.v24.1">
+      <HintPath>..\EasyEDA-Loader\lib\AD25\DevExpress.XtraEditors.v24.1.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+
+	<ItemGroup>
+		<Reference Include="Microsoft.Web.WebView2.Core">
+			<Private>True</Private>
+		</Reference>
+		<Reference Include="Microsoft.Web.WebView2.WinForms">
+			<Private>True</Private>
+		</Reference>
+		<Reference Include="Microsoft.Web.WebView2.Wpf">
+			<Private>True</Private>
+		</Reference>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Update="Helper_Files\Data.info">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Update="Helper_Files\EasyEDA-LoaderNG.Ins">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Update="Helper_Files\EasyEDA-LoaderNG.rcs">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Update="Helper_Files\Readme.txt">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	</ItemGroup>
+
+	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+	  <Exec Command="copy /Y &quot;$(TargetPath)&quot; &quot;C:\ProgramData\Altium\Altium Designer {778F3BD3-0BF2-4ED3-98F3-AB7A9ADB5120}\Extensions\EasyEDA-LoaderNG\&quot;" />
+	</Target>
+
+</Project>
