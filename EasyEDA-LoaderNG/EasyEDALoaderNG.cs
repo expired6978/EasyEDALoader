@@ -30,10 +30,8 @@ namespace EasyEDA_LoaderNG
         public EasyEDALoaderNGModule(IClient argClient)
             : base(argClient, "EasyEDA-LoaderNG")
         {
-            Helper.Log("Constructor called");
-
+            // Nettoyage : Suppression des logs de constructeur inutiles en prod
             noGUIMode = argClient.ProductInfo().SupportsUIFeature("NoGUI", false);
-            Helper.Log($"noGUIMode = {noGUIMode}");
         }
 
         protected override IServerDocument NewDocumentInstance(
@@ -42,11 +40,8 @@ namespace EasyEDA_LoaderNG
 
         protected override void InitializeCommands()
         {
-            Helper.Log("InitializeCommands called");
-
+            // On enregistre la commande silencieusement
             RegisterCommand("EasyEDARunNG", new CommandProc(Run));
-
-            Helper.Log("Command EasyEDARunNG registered");
         }
 
         private void RegisterCommand(
@@ -66,6 +61,7 @@ namespace EasyEDA_LoaderNG
                         if (noGUIMode)
                             throw;
 
+                        // En cas de crash global du plugin, on affiche une popup explicite
                         MessageBox.Show(
                             ex.ToString(),
                             "EasyEDA Loader NG Error",
@@ -76,7 +72,7 @@ namespace EasyEDA_LoaderNG
         }
 
 
-        // --- PREUVE DE VIE
+        // --- Lancement du Plugin
         private void Run(
             IServerDocumentView argContext,
             ref string argParameters)
@@ -86,20 +82,11 @@ namespace EasyEDA_LoaderNG
 
             using var form = new LcscBrowserForm();
 
-            // DEBUG / preuve de workflow
-            form.UrlChanged += (_, url) =>
-            {
-                // Détection Cxxxx (comme Standalone)
-                var match = Regex.Match(url, @"C\d+");
-                if (match.Success)
-                {
-                    Helper.Log($"Detected SKU: {match.Value}");
-                }
-            };
+            // Nettoyage : On a supprimé le listener UrlChanged ici.
+            // La Form gère déjà ses propres logs de navigation via la CheckBox Debug.
+            // Plus besoin de faire remonter l'info au Module parent.
 
             form.ShowDialog();
         }
-
-
     }
 }
