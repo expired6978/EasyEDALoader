@@ -8,6 +8,7 @@ using System;
 using System.IO;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -26,6 +27,11 @@ namespace EasyEDA_LoaderNG
         private readonly TextBox _txtSearch;
         private readonly Button _btnImportLib;
         private readonly CheckBox _chkDebug;
+
+        // Placement interactif demandé (exécuté après fermeture du form)
+        private bool _pendingInteractivePlacement;
+        private string? _pendingPlacePartName;
+        private string? _pendingPlaceSchLibPath;
 
         // Visual Feedbacks
         private readonly ProgressBar _progressBar;
@@ -720,32 +726,98 @@ namespace EasyEDA_LoaderNG
                     AltiumApi.GlobalVars.Client.CloseDocument(schDocument);
                 }
 
+                // TODO: Revisit true "ghost" placement (component attached to mouse cursor)
+                // using PlaceSchComponent / AddAndPositionSchObject or the native process engine.
+                //
+                // Note: current implementation uses simple auto-placement on the schematic.
+                // It is 100% reliable and predictable.
+                //
+                // On December 29th, 2025, the COM layer of Altium ("E_UNEXPECTED") put up
+                // a good fight. This is not surrender, just postponing the battle until
+                // future-me (or some brave maintainer) feels like wrestling undocumented APIs again.
+
                 // ---------------------------------------------------------
-                // 5. PLACEMENT FINAL
+                // 5. PLACEMENT FINAL – SIMPLE, STABLE, AU CENTRE
                 // ---------------------------------------------------------
-                _lblStatus.Text = "Placing component...";
+                _lblStatus.Text = "Placing component on schematic...";
+                LogDebug("[PIPELINE] Final placement (center-of-sheet)...");
 
-                var currentDoc = AltiumApi.GlobalVars.Client.GetCurrentView()?.GetOwnerDocument();
-                if (currentDoc != null) AltiumApi.GlobalVars.Client.ShowDocument(currentDoc);
+                // On s'assure que la vue courante est bien le schéma
+                var currentDocView = AltiumApi.GlobalVars.Client.GetCurrentView()?.GetOwnerDocument();
+                if (currentDocView != null)
+                    AltiumApi.GlobalVars.Client.ShowDocument(currentDocView);
 
-                var currentSheet = AltiumApi.GlobalVars.SCHServer.GetCurrentSchDocument();
-                var newComponent = AltiumApi.GlobalVars.SCHServer.LoadComponentFromLibrary(partName, schLibraryPath);
-
-                if (newComponent != null && currentSheet != null)
+                var currentSheetObj = AltiumApi.GlobalVars.SCHServer.GetCurrentSchDocument();
+                if (currentSheetObj == null)
                 {
-                    currentSheet.AddSchObject(newComponent);
-                    newComponent.MoveToXY(10, 10);
-                    currentSheet.GraphicallyInvalidate();
-
-                    LogDebug($"[PIPELINE] ✅ SUCCESS: {partName} placed on sheet.");
-                }
-                else
-                {
-                    // Erreur logique, on la garde en LogDebug car ce n'est pas un crash C#
-                    LogDebug("[PIPELINE] ⚠️ Warning: Could not place component (Sheet or Component is null).");
+                    LogDebug("[PIPELINE] ⚠ No current schematic document, aborting placement.");
+                    this.Close();
+                    return;
                 }
 
-                this.Close();
+                var schDoc = currentSheetObj as SCH.ISch_Document;
+
+                var compInstance = AltiumApi.GlobalVars.SCHServer.LoadComponentFromLibrary(partName, schLibraryPath);
+                if (compInstance == null)
+                {
+                    LogDebug($"[PIPELINE] ⚠ LoadComponentFromLibrary returned null for '{partName}'.");
+                    this.Close();
+                    return;
+                }
+
+                try
+                {
+                    int targetX;
+                    int targetY;
+
+                    if (schDoc != null)
+                    {
+                        // Taille de feuille interne (même unité que MoveToXY)
+                        int sheetX = schDoc.GetState_SheetSizeX();
+                        int sheetY = schDoc.GetState_SheetSizeY();
+
+                        // On vise le centre, avec une marge (pour éviter les cadres)
+                        targetX = sheetX * 2 / 3;
+                        //targetY = sheetY * 2 / 3;
+                        targetY = 50;
+
+                        LogDebug($"[PLACE] Sheet size: {sheetX}x{sheetY}, target=({targetX},{targetY})");
+                    }
+                    else
+                    {
+                        // Sécurité : coordonnées raisonnables si jamais le cast échoue
+                        targetX = 0;
+                        targetY = 0;
+                        LogDebug("[PLACE] ISch_Document cast failed, using default coordinates (1000,1000).");
+                    }
+
+                    // Si le composant est graphique, on le déplace AVANT de l'ajouter
+                    if (compInstance is SCH.ISch_GraphicalObject gobj)
+                    {
+                        gobj.MoveToXY(targetX, targetY);
+                    }
+                    else
+                    {
+                        LogDebug("[PLACE] Component is not ISch_GraphicalObject, cannot MoveToXY before add.");
+                    }
+
+                    // Ajout au schéma
+                    ((SCH.ISch_BasicContainer)currentSheetObj).AddSchObject(compInstance);
+
+                    // Rafraîchissement de l'affichage
+                    (compInstance as SCH.ISch_GraphicalObject)?.GraphicallyInvalidate();
+                    schDoc?.UpdateDisplayForCurrentSheet();
+
+                    LogDebug($"[PIPELINE] ✅ Component '{partName}' placed at ({targetX},{targetY}).");
+                }
+                catch (Exception ex)
+                {
+                    Helper.Log($"[PIPELINE ERROR] Placement failed: {ex.Message}\n{ex.StackTrace}");
+                }
+                finally
+                {
+                    this.Close();
+                }
             }
             catch (Exception ex)
             {
@@ -755,11 +827,13 @@ namespace EasyEDA_LoaderNG
                 _btnSearchLcsc.Enabled = true;
                 _btnSearchJlc.Enabled = true;
 
-                // ERREUR CRITIQUE = Helper.Log (Toujours visible)
                 Helper.Log($"[PIPELINE ERROR] {ex.Message}\nStack: {ex.StackTrace}");
                 MessageBox.Show($"Import failed:\n{ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+
+
+
         /// <summary>
         /// Extrait le SKU (ex: C1091) d'une URL de manière intelligente.
         /// Ignore les faux positifs comme "RC02" dans le nom du composant.
@@ -782,5 +856,6 @@ namespace EasyEDA_LoaderNG
 
             return null;
         }
-    }
+
+}
 }
