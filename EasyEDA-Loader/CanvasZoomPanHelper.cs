@@ -1,18 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media;
 
-namespace Standalone
+namespace EasyEDA_Loader
 {
-    using System;
-    using System.Windows;
-    using System.Windows.Controls;
-    using System.Windows.Input;
-    using System.Windows.Media;
-    using System.Windows.Shapes;
-
     public class CanvasZoomPanHelper
     {
         private readonly Canvas _canvas;
@@ -39,10 +32,10 @@ namespace Standalone
             AttachEvents();
         }
 
-        private T? FindParent<T>(DependencyObject child) where T : DependencyObject
+        private T FindParent<T>(DependencyObject child) where T : DependencyObject
         {
-            DependencyObject? parent = VisualTreeHelper.GetParent(child);
-            while (parent != null && parent is not T)
+            DependencyObject parent = VisualTreeHelper.GetParent(child);
+            while (parent != null && !(parent is T))
                 parent = VisualTreeHelper.GetParent(parent);
             return parent as T;
         }
@@ -69,30 +62,24 @@ namespace Standalone
             if (scrollViewer == null)
                 return;
 
-            // 1. Measure bounds of canvas content
             Rect contentBounds = CalculateCanvasBounds();
             if (contentBounds.IsEmpty || contentBounds.Width == 0 || contentBounds.Height == 0)
                 return;
 
-            // 2. Get visible size (viewport)
             double viewportWidth = scrollViewer.ViewportWidth;
             double viewportHeight = scrollViewer.ViewportHeight;
 
             if (viewportWidth <= 0 || viewportHeight <= 0)
                 return;
 
-            // 3. Compute uniform scale (fit to visible size)
             double scale = Math.Min(viewportWidth / contentBounds.Width, viewportHeight / contentBounds.Height);
 
-            // 4. Center the content in the viewport
             double centerOffsetX = (viewportWidth - contentBounds.Width * scale) / 2;
             double centerOffsetY = (viewportHeight - contentBounds.Height * scale) / 2;
 
-            // 5. Translate so that contentBounds.Left/Top maps to origin
             double translateX = -contentBounds.Left * scale + centerOffsetX;
             double translateY = -contentBounds.Top * scale + centerOffsetY;
 
-            // 6. Apply transforms
             _scaleTransform.ScaleX = scale;
             _scaleTransform.ScaleY = scale;
             _translateTransform.X = translateX;
@@ -110,7 +97,6 @@ namespace Standalone
                     double left = Canvas.GetLeft(fe);
                     double top = Canvas.GetTop(fe);
 
-                    // Default to 0 if not set
                     if (double.IsNaN(left)) left = 0;
                     if (double.IsNaN(top)) top = 0;
 
@@ -124,21 +110,31 @@ namespace Standalone
 
         private void Canvas_MouseWheel(object sender, MouseWheelEventArgs e)
         {
+            var scrollViewer = sender as ScrollViewer;
+            if (scrollViewer == null)
+                return;
+
             Point mousePos = e.GetPosition(_canvas);
 
-            double zoomDelta = e.Delta > 0 ? 1.1 : 1.0 / 1.1;
-            double newScale = _scaleTransform.ScaleX * zoomDelta;
+            double zoomFactor = e.Delta > 0 ? 1.1 : 1.0 / 1.1;
+            double newScale = _scaleTransform.ScaleX * zoomFactor;
 
-            // Limit zoom levels
-            if (newScale < 0.01 || newScale > 100) return;
+            if (newScale < 0.01 || newScale > 100)
+            {
+                e.Handled = true;
+                return;
+            }
 
-            // Update scale
+            Point transformedMouse = new Point(
+                (mousePos.X * _scaleTransform.ScaleX) + _translateTransform.X,
+                (mousePos.Y * _scaleTransform.ScaleY) + _translateTransform.Y
+            );
+
             _scaleTransform.ScaleX = newScale;
             _scaleTransform.ScaleY = newScale;
 
-            // Adjust translation to zoom around mouse
-            _translateTransform.X = (1 - zoomDelta) * mousePos.X + _translateTransform.X;
-            _translateTransform.Y = (1 - zoomDelta) * mousePos.Y + _translateTransform.Y;
+            _translateTransform.X = transformedMouse.X - (mousePos.X * newScale);
+            _translateTransform.Y = transformedMouse.Y - (mousePos.Y * newScale);
 
             e.Handled = true;
         }
@@ -178,10 +174,11 @@ namespace Standalone
                 _translateTransform.Y += delta.Y;
             }
         }
+
         private void Canvas_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
             FitToBoundingBox();
+            e.Handled = true;
         }
     }
-
 }

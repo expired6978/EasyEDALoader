@@ -160,7 +160,14 @@ namespace EasyEDA_Loader
 
         public EeFootprint3dModel GetModel()
         {
-            return Shapes.OfType<EeFootprint3dModel>().First();
+            try
+            {
+                return Shapes.OfType<EeFootprint3dModel>().First();
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         public void DrawToCanvas(Canvas c, EeFootprintContext ctx)

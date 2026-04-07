@@ -19,10 +19,10 @@ namespace EasyEDA_Loader
                 Y = ConvertToMM(double.Parse(parts[2])),
                 Width = ConvertToMM(double.Parse(parts[3])),
                 Height = ConvertToMM(double.Parse(parts[4])),
-                StrokeWidth = ConvertToMM(double.Parse(parts[5])),
+                StrokeWidth = ConvertToMM(double.Parse(parts[8])),
                 Id = parts[6],
-                LayerId = parts[7],
-                IsLocked = ParseBoolean(parts[8]),
+                LayerId = parts[5],
+                IsLocked = ParseBoolean(parts[7]),
             };
         }
         public override List<UIElement> AddToCanvas(Canvas c, EeFootprintContext ctx)
@@ -33,7 +33,7 @@ namespace EasyEDA_Loader
             {
                 Tuple.Create(X - box.X, Y - box.Y, X + Width - box.X, Y - box.Y ),
                 Tuple.Create(X - box.X, Y - box.Y, X - box.X, Y + Height - box.Y ),
-                Tuple.Create(X - box.X, Height - box.Y, X + Width - box.X, Y + Height - box.Y ),
+                Tuple.Create(X - box.X, Y + Height - box.Y, X + Width - box.X, Y + Height - box.Y ),
                 Tuple.Create(X + Width - box.X, Y - box.Y, X + Width - box.X, Y + Height - box.Y )
             };
 
@@ -61,7 +61,7 @@ namespace EasyEDA_Loader
             {
                 Tuple.Create(X, Y, X + Width, Y ),
                 Tuple.Create(X, Y, X, Y + Height ),
-                Tuple.Create(X, Height, X + Width, Y + Height ),
+                Tuple.Create(X, Y + Height, X + Width, Y + Height ),
                 Tuple.Create(X + Width, Y, X + Width, Y + Height )
             };
 

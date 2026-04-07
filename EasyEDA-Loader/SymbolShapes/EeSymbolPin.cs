@@ -106,6 +106,18 @@ namespace EasyEDA_Loader
                     FontSize = EeSymbolPinName.ParseFontSize(ee_segments[3][7]),
                     Color = ee_segments[3][8],
                 },
+                Designator = new EeSymbolPinName
+                {
+                    IsDisplayed = ParseDisplay(ee_segments[4][0]),
+                    PosX = double.Parse(ee_segments[4][1]),
+                    PosY = double.Parse(ee_segments[4][2]),
+                    Rotation = ParseInt(ee_segments[4][3]),
+                    Text = ee_segments[4][4],
+                    TextAnchor = ee_segments[4][5],
+                    Font = ee_segments[4][6],
+                    FontSize = EeSymbolPinName.ParseFontSize(ee_segments[4][7]),
+                    Color = ee_segments[4][8],
+                },
                 Dot = new EeSymbolPinDotBis
                 {
                     IsDisplayed = ParseDisplay(ee_segments[5][0]),
@@ -123,6 +135,7 @@ namespace EasyEDA_Loader
         public EeSymbolPinDot PinDot { get; set; }
         public EeSymbolPinPath PinPath { get; set; }
         public EeSymbolPinName Name { get; set; }
+        public EeSymbolPinName Designator { get; set; }
         public EeSymbolPinDotBis Dot { get; set; }
         public EeSymbolPinClock Clock { get; set; }
     }

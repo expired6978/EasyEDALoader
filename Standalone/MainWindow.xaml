@@ -8,6 +8,10 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="455" Width="483" Background="#FF313131">
     <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="1*"/>
+            <ColumnDefinition Width="1*"/>
+        </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -16,25 +20,56 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <TextBox x:Name="PartId" TextWrapping="Wrap" Text="C7419871" Grid.Row="0" Margin="10,10,10,10" Background="#FF7F7F7F" Uid="{Binding Text, ElementName=PartId}"/>
-        <Viewbox x:Name="PreviewBox" Grid.Row="1" MinHeight="50" HorizontalAlignment="Center" Stretch="Uniform" Margin="10,0,10,0">
+        <Grid Margin="10,10,10,10" Grid.ColumnSpan="2" HorizontalAlignment="Stretch">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <TextBox x:Name="PartId" Grid.Column="0" TextWrapping="Wrap" Text="C7419871" Background="#FF7F7F7F" Uid="{Binding Text, ElementName=PartId}" HorizontalContentAlignment="Stretch" Margin="0,1,5,1" HorizontalAlignment="Stretch"/>
+            <Button x:Name="SearchButton" Content="Search" Grid.Column="1" Padding="5,1,5,1" VerticalContentAlignment="Center" HorizontalAlignment="Stretch" Click="SearchButton_Click"/>
+        </Grid>
+        <Viewbox x:Name="PreviewBox" Grid.Column="1" Grid.Row="1" MinHeight="50" HorizontalAlignment="Center" Stretch="Uniform" Margin="10,0,10,0">
             <Image x:Name="Thumbnail" Height="50" Width="50"/>
         </Viewbox>
-        <ScrollViewer x:Name="SymbolCanvasView" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Grid.Row="2" Margin="10,10,10,10" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden" Background="Black">
+        <ScrollViewer x:Name="SymbolCanvasView" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Grid.Column="1" Grid.Row="2" Margin="10,10,10,10" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden" Background="Black">
             <Canvas x:Name="SymbolCanvas" Height="100" Width="100" HorizontalAlignment="Left" VerticalAlignment="Top"/>
         </ScrollViewer>
-        <ScrollViewer x:Name="FootprintCanvasView" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Grid.Row="3" Margin="10,10,10,10" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden" Background="Black">
+        <ScrollViewer x:Name="FootprintCanvasView" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Grid.Column="1" Grid.Row="3" Margin="10,10,10,10" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden" Background="Black">
             <Canvas x:Name="FootprintCanvas" Height="100" Width="100" HorizontalAlignment="Left" VerticalAlignment="Top"/>
         </ScrollViewer>
-        <h:HelixViewport3D x:Name="ModelView" Grid.Row="4" HorizontalAlignment="Stretch" Margin="10,0,10,0">
+        <h:HelixViewport3D x:Name="ModelView" Grid.Column="1" Grid.Row="4" HorizontalAlignment="Stretch" Margin="10,0,10,0">
             <h:DefaultLights />
         </h:HelixViewport3D>
-        <StackPanel HorizontalAlignment="Left" Margin="10,10,0,10" Orientation="Horizontal" Grid.Row="5" VerticalAlignment="Center">
+        <StackPanel HorizontalAlignment="Left" Margin="10,10,0,10" Orientation="Horizontal" Grid.Row="5" Grid.Column="1" VerticalAlignment="Center">
             <Button x:Name="LoadButton" Content="Load" Height="28" Width="81" Background="#FF424242" Click="LoadButton_Click"/>
             <Button x:Name="ModelButton" Content="Step..." Background="#FF424242" Margin="10,0,0,0" Width="65" IsEnabled="False" Click="ModelButton_Click"/>
             <Button x:Name="ObjButton" Content="Obj..." Background="#FF424242" Margin="10,0,0,0" Width="65" IsEnabled="False" Click="ObjModelButton_Click"/>
         </StackPanel>
-
-
+        <Grid Margin="10,0,10,13" Grid.RowSpan="5" Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <ListView x:Name="SearchBox" d:ItemsSource="{d:SampleData ItemCount=5}" Grid.Row="0" Grid.Column="0" SelectionChanged="SearchBox_SelectionChanged" MouseDoubleClick="SearchBox_MouseDoubleClick">
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn x:Name="NameColumn" Header="Name" DisplayMemberBinding="{Binding Name}" Width="150"/>
+                        <GridViewColumn x:Name="PartColumn" Header="Part" DisplayMemberBinding="{Binding Part}" Width="200"/>
+                        <GridViewColumn x:Name="DescColumn" Header="Description" DisplayMemberBinding="{Binding Description}" Width="200"/>
+                    </GridView>
+                </ListView.View>
+            </ListView>
+            <ListView x:Name="DetailsView" d:ItemsSource="{d:SampleData ItemCount=5}" Grid.Row="1">
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn x:Name="KeyColumn" Header="Key" DisplayMemberBinding="{Binding Key}" Width="150"/>
+                        <GridViewColumn x:Name="ValueColumn" Header="Attribute" DisplayMemberBinding="{Binding Value}" Width="200"/>
+                    </GridView>
+                </ListView.View>
+            </ListView>
+        </Grid>
     </Grid>
 </Window>

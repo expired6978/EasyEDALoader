@@ -6,32 +6,34 @@ namespace EasyEDA_Loader
 {
     public class EESCH
     {
-        public static (ISch_Lib, ISch_Component) CreateComponentInLib(string name, string desc, string designator)
+        public static ISch_Lib GetCurrentSchLibrary()
         {
             var schDoc = AltiumApi.GlobalVars.SCHServer.GetCurrentSchDocument();
             if (schDoc == null)
             {
                 MessageBox.Show("This is not a SCH library document", "EasyEDA Loader Error", MessageBoxButtons.OK, MessageBoxIcon.Hand);
-                return (null, null);
+                return null;
             }
             if (schDoc != null && schDoc.GetState_ObjectId() != SCH.TObjectId.eSchLib)
             {
                 MessageBox.Show("Open schematic library", "EasyEDA Loader Error", MessageBoxButtons.OK, MessageBoxIcon.Hand);
-                return (null, null);
+                return null;
             }
 
-            var schLib = schDoc as ISch_Lib;
-
+            return schDoc as ISch_Lib;
+        }
+        public static ISch_Component CreateComponent(string name, string desc, string designator)
+        {
             var schComponent = AltiumApi.GlobalVars.SCHServer.SchObjectFactory(SCH.TObjectId.eSchComponent, SCH.TObjectCreationMode.eCreate_Default) as ISch_Component;
             if (schComponent == null)
-                return (null, null);
+                return null;
 
             schComponent.SetState_CurrentPartID(1);
             schComponent.SetState_DisplayMode(0);
             schComponent.SetState_LibReference(name);
             schComponent.GetState_SchDesignator().SetState_Text(designator);
             schComponent.SetState_ComponentDescription(desc);
-            return (schLib, schComponent);
+            return schComponent;
         }
 
 

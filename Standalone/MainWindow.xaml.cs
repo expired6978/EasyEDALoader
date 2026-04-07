@@ -104,12 +104,9 @@ namespace Standalone
             }
         }
 
-        private void LoadButton_Click(object sender, RoutedEventArgs e)
+        private void LoadPart(string partName)
         {
-            var api = new EasyedaApi();
-
-            string partName = PartId.Text;
-            if(RawModel != null)
+            if (RawModel != null)
                 ModelView.Children.Remove(RawModel);
 
             FootprintCanvas.Children.Clear();
@@ -119,6 +116,11 @@ namespace Standalone
 
             var productInfoTask = Task.Run(() => Api.GetProductInfoAsync(partName, DocumentTask.Result.Component.Owner.Uuid));
             productInfoTask.Wait();
+
+            if(productInfoTask.Result != null)
+            {
+                PopulateParameters(productInfoTask.Result);
+            }
 
             Component = DocumentTask.Result.Component;
 
@@ -137,7 +139,7 @@ namespace Standalone
 
             try
             {
-                ThumbnailTask = Task.Run(() => api.LoadPngAsync(Component.Thumb, cts.Token));
+                ThumbnailTask = Task.Run(() => Api.LoadPngAsync(Component.Thumb, cts.Token));
                 ThumbnailTask.ContinueWith(t =>
                 {
                     Thumbnail.Dispatcher.Invoke(() =>
@@ -204,6 +206,11 @@ namespace Standalone
             }, DispatcherPriority.Loaded);
         }
 
+        private void LoadButton_Click(object sender, RoutedEventArgs e)
+        {
+            LoadPart(PartId.Text);
+        }
+
         private void ModelButton_Click(object sender, RoutedEventArgs e)
         {
             if(Model != null)
@@ -220,6 +227,49 @@ namespace Standalone
                 ModelTask = Task.Run(() => Api.LoadRawModelAsync(Model.Uuid, cts.Token));
                 ModelTask.Wait();
                 SaveRawModelToFile(Model, ModelTask.Result);
+            }
+        }
+
+        private void PopulateSearchBox(List<EasyedaApi.PartInfo> parts)
+        {
+            SearchBox.ItemsSource = parts?.ToList();
+            NameColumn.Width = Double.NaN;
+            PartColumn.Width = Double.NaN;
+            DescColumn.Width = Double.NaN;
+        }
+
+        private void SearchButton_Click(object sender, RoutedEventArgs e)
+        {
+            var api = new EasyedaApi();
+
+            string partName = PartId.Text;
+
+            var productInfo = Task.Run(() => Api.SearchProductInfoAsync(partName));
+            productInfo.Wait();
+
+            PopulateSearchBox(productInfo.Result);
+        }
+
+        private void PopulateParameters(EasyedaApi.ProductInfo productInfo)
+        {
+            DetailsView.ItemsSource = productInfo.Parameters;
+            KeyColumn.Width = Double.NaN;
+            ValueColumn.Width = Double.NaN;
+        }
+
+        private void SearchBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            if (SearchBox.SelectedItem is EasyedaApi.PartInfo selectedItem)
+            {
+                PopulateParameters(selectedItem.Info);
+            }
+        }
+
+        private void SearchBox_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (SearchBox.SelectedItem is EasyedaApi.PartInfo selectedItem)
+            {
+                LoadPart(selectedItem.Part);
             }
         }
     }
