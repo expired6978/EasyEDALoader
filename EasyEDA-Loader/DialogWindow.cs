@@ -271,7 +271,7 @@ namespace EasyEDA_Loader
             try
             {
                 Mouse.OverrideCursor = Cursors.Wait;
-                
+
                 // Run the API call on a background thread
                 var searchText = searchTextBox.Text;
                 var results = await Task.Run(() => Api.SearchProductInfoAsync(searchText));
@@ -330,7 +330,7 @@ namespace EasyEDA_Loader
                 foreach (var partViewModel in selectedParts)
                 {
                     var partInfo = partViewModel.PartInfo;
-                    
+
                     // Fetch component data
                     var root = await Task.Run(() => Api.GetComponentJsonAsync(partInfo.Part, cts.Token));
 
@@ -362,6 +362,9 @@ namespace EasyEDA_Loader
                 MessageBox.Show($"Failed to load component data: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 addToLibraryButton.IsEnabled = true;
                 cancelButton.IsEnabled = true;
+            }
+            finally
+            {
                 Mouse.OverrideCursor = null;
             }
         }
