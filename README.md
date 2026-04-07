@@ -10,7 +10,9 @@ I used easyeda2kicad as a reference for this project as well as AtliumLibraryLoa
 
 # Usage
 
-Using the extension is pretty straight forward once it is installed, there will be a new Menu option `EasyEDA Loader` while a SchDoc is active, this will open a Modal Dialog which prompts the LCSC Part number e.g. "C2040". 
+Using the extension is pretty straight forward once it is installed, there will be a new Menu option `EasyEDA Loader` while a SchDoc is active, this will open a Modal Dialog which prompts the LCSC Part number e.g. "C2040". Tick which part you want to add after searching and press Add to Library
+
+![Dialog](/Assets/Loader.PNG)
 
 Hitting OK will automatically create `EasyEDA.pcblib` and `EasyEDA.schlib` if they don't already exist in `Documents/AltiumEE`, create the footprint, download the 3d model, create the symbol, add part info, map the footprint to the symbol, then place the component into the active schematic at the bottom left.
 
@@ -46,11 +48,17 @@ C:\Program Files\Altium\AD24\System\DotNet\DevExpress.Wpf
 ```
 
 ```
-Altium.Controls.dll
-Altium.SDK.dll
-Altium.SDK.Interfaces.dll
-DevExpress.Utils.v22.1.dll
-DevExpress.XtraEditors.v22.1.dll
+Altium.Controls
+Altium.Controls.Skins
+Altium.SDK
+Altium.SDK.Interfaces
+DevExpress.Data.v22.1
+DevExpress.Mvvm.v22.1
+DevExpress.Printing.v22.1.Core
+DevExpress.Utils.v22.1
+DevExpress.Xpf.Core.v22.1
+DevExpress.Xpf.Grid.v22.1.Core
+DevExpress.Xpf.Grid.v22.1
 ```
 
 # Standalone
