@@ -14,11 +14,13 @@ namespace EasyEDA_Loader
         {
             var parts = data.Split(new[] { "~" }, StringSplitOptions.None);
             SvgNode node = JsonConvert.DeserializeObject<SvgNode>(parts[1]);
-            var originParts = node.Attrs.COrigin.Split(new[] { "," }, StringSplitOptions.None);
             var rotationParts = node.Attrs.CRotation.Split(new[] { "," }, StringSplitOptions.None);
 
-            double CenterX = double.Parse(originParts[0], System.Globalization.CultureInfo.InvariantCulture);
-            double CenterY = double.Parse(originParts[1], System.Globalization.CultureInfo.InvariantCulture);
+            // c_origin is wherever the 3D CAD tool's own workspace zero happened to be when the
+            // STEP model was authored - it has no relationship to where the model should be
+            // placed on the footprint, so it's not used here. The model is placed at the
+            // footprint's own local origin instead (the same reference point every other shape
+            // is anchored to via ConvertX/ConvertY).
 
             // Center compute, shouldnt be needed, the GL engine does this for verification of somekind
             /*
@@ -53,8 +55,8 @@ namespace EasyEDA_Loader
                 Width = ConvertToMM(double.Parse(node.Attrs.CWidth, System.Globalization.CultureInfo.InvariantCulture)),
                 Translation = new Vec3
                 {
-                    X = ConvertToMM(CenterX),
-                    Y = ConvertToMM(CenterY),
+                    X = 0,
+                    Y = 0,
                     Z = ConvertToMM(double.Parse(node.Attrs.Z, System.Globalization.CultureInfo.InvariantCulture))
                 },
                 Rotation = new Vec3
@@ -105,13 +107,12 @@ namespace EasyEDA_Loader
                 string temp = Path.Combine(Path.GetTempPath(), $"{Uuid}.step");
                 File.WriteAllBytes(temp, modelTask.Result);
 
-                // The translation is not quite right, the values shown in "3D Model Manager" are available from the Search API as "3D Model Transform"
-                // The Y axis is slightly off and I cannot figure out the missing piece maybe combination of rotation/y-flip/re-center causing this to be wrong
-                // Where the mesh starts X,Y in the EE model manager seems to differ from the computed one here
                 // The Z is the lowest Z of the mesh plus the Z offset (hence why we download the Raw mesh and search for the lowest vert.z as this offset is not part of the info)
 
-                // Will leave this for now as it's "close enough" most of the time to only need a nudge by a few 10ths of a millimeter
-                var body = EEPCB.CreateComponentBody(c, temp, Rotation.X, Rotation.Y, Rotation.Z, ConvertX(Translation.X, ctx), ConvertY(Translation.Y, ctx), Translation.Z + heightTask.Result);
+                // Translation.X/Y are already local-origin coordinates (see FromString) - they land
+                // directly on the footprint's own origin without going through ConvertX/ConvertY,
+                // which would otherwise apply the bounding-box centering a second time.
+                var body = EEPCB.CreateComponentBody(c, temp, Rotation.X, Rotation.Y, Rotation.Z, Translation.X, Translation.Y, Translation.Z + heightTask.Result);
                 EEPCB.AddToPCB(c, body);
 
                 File.Delete(temp);
