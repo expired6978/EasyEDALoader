@@ -1,5 +1,6 @@
 ﻿using EDP;
 using SCH;
+using System.Collections.Generic;
 using System.Windows.Forms;
 
 namespace EasyEDA_Loader
@@ -159,6 +160,38 @@ namespace EasyEDA_Loader
             line.SetState_OwnerPartId(schLib.GetState_CurrentSchComponentPartId());
             line.SetState_OwnerPartDisplayMode(schLib.GetState_CurrentSchComponentDisplayMode());
             c.AddSchObject(line);
+        }
+
+        // For filled schematic graphics (EasyEDA's PL/PG/PT shapes - polylines drawn closed,
+        // polygons, and paths, e.g. diode arrows), which were previously parsed but never drawn.
+        // ISch_Polygon (shared by ISch_Polyline) exposes SetState_VerticesCount + SetState_Vertex
+        // for building the outline point-by-point. Filled the same way CreateRectangle fills itself.
+        public static void CreatePolygon(ISch_Lib schLib, ISch_Component c, List<EePoint> points)
+        {
+            if (points == null || points.Count < 3)
+                return;
+            var polygon = AltiumApi.GlobalVars.SCHServer.SchObjectFactory(SCH.TObjectId.ePolygon, SCH.TObjectCreationMode.eCreate_Default) as ISch_Polygon;
+            if (polygon == null)
+                return;
+
+            polygon.SetState_VerticesCount(points.Count);
+            for (int i = 0; i < points.Count; i++)
+            {
+                // SetState_Vertex is 1-indexed, not 0-indexed - without the "+ 1" the last vertex
+                // silently defaults to (0,0) and the rest are shifted one slot from what was set.
+                polygon.SetState_Vertex(i + 1, new DXP.Point
+                {
+                    X = AltiumApi.MilsToCoord(points[i].X),
+                    Y = AltiumApi.MilsToCoord(points[i].Y)
+                });
+            }
+            polygon.SetState_LineWidth(TSize.eSmall);
+            polygon.SetState_Color(0);
+            polygon.SetState_AreaColor(0);
+            polygon.SetState_IsSolid(true);
+            polygon.SetState_OwnerPartId(schLib.GetState_CurrentSchComponentPartId());
+            polygon.SetState_OwnerPartDisplayMode(schLib.GetState_CurrentSchComponentDisplayMode());
+            c.AddSchObject(polygon);
         }
 
         public static void AssignFootprint(ISch_Component c, string libraryPath, string modelName, string modelMapping)

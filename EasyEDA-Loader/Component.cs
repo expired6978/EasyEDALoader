@@ -149,6 +149,31 @@ namespace EasyEDA_Loader
 
         [JsonProperty("packageDetail")]
         public PackageDetail PackageDetail { get; set; }
+
+        // Multi-subpart components (op-amps with multiple gates, big MCUs like STM32MP135 whose
+        // pins are split across several drawn "parts") carry their real pin/shape data here
+        // instead of in the top-level dataStr - the top-level one is empty ("shape": []) for
+        // these parts. See EasyEDALoader.cs for how this gets used.
+        [JsonProperty("subparts")]
+        public List<Subpart> Subparts { get; set; }
+    }
+
+    public class Subpart
+    {
+        [JsonProperty("uuid")]
+        public string Uuid { get; set; }
+
+        [JsonProperty("title")]
+        public string Title { get; set; }
+
+        [JsonProperty("dataStr")]
+        public SymbolData DataStr { get; set; }
+
+        [JsonProperty("description")]
+        public string Description { get; set; }
+
+        [JsonProperty("thumb")]
+        public string Thumb { get; set; }
     }
 
     public class Root

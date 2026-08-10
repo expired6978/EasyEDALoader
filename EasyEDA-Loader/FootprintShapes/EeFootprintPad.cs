@@ -31,6 +31,8 @@ namespace EasyEDA_Loader
                 HolePoints = EePoint.ListFromString(parts[14]),
                 IsPlated = ParseBoolean(parts[15]),
                 IsLocked = ParseBoolean(parts[16]),
+                PasteMaskExpansion = ConvertToMM(double.Parse(parts[17], System.Globalization.CultureInfo.InvariantCulture)),
+                SolderMaskExpansion = ConvertToMM(double.Parse(parts[18], System.Globalization.CultureInfo.InvariantCulture)),
             };
         }
         public override List<UIElement> AddToCanvas(Canvas c, EeFootprintContext ctx)
@@ -173,6 +175,19 @@ namespace EasyEDA_Loader
                         }
                         pad.SetState_HoleWidth(AltiumApi.MmToCoord(HoleLength));
                     }
+                    // Same GetState_Cache/SetState_Cache pattern EeFootprintHole.cs already uses to
+                    // zero a hole's solder mask expansion, reused here for the pad's own solder/paste
+                    // mask expansion overrides (previously-parsed fields that were never read).
+                    // EasyEDA only carries a single solder value (no separate top/bottom), so both
+                    // sides are set the same, matching the convention EeFootprintHole.cs already uses.
+                    var padCache = pad.GetState_Cache();
+                    padCache.SolderMaskExpansionValid = TCacheState.eCacheManual;
+                    padCache.UseSeparateExpansions = true;
+                    padCache.SolderMaskExpansion = AltiumApi.MmToCoord(SolderMaskExpansion);
+                    padCache.SolderMaskBottomExpansion = AltiumApi.MmToCoord(SolderMaskExpansion);
+                    padCache.PasteMaskExpansionValid = TCacheState.eCacheManual;
+                    padCache.PasteMaskExpansion = AltiumApi.MmToCoord(PasteMaskExpansion);
+                    pad.SetState_Cache(padCache);
                     EEPCB.AddToPCB(c, pad);
                 }
                 catch (Exception ex)
@@ -201,6 +216,8 @@ namespace EasyEDA_Loader
         public List<EePoint> HolePoints { get; set; }
         public bool IsPlated { get; set; }
         public bool IsLocked { get; set; }
+        public double SolderMaskExpansion { get; set; }
+        public double PasteMaskExpansion { get; set; }
     }
 
 }

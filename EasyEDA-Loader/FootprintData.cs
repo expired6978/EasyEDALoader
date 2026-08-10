@@ -250,7 +250,7 @@ namespace EasyEDA_Loader
                     case "SVGNODE":
                         return EeFootprint3dModel.FromString(raw);
                     case "SOLIDREGION":
-                        return null;
+                        return EeFootprintSolidRegion.FromString(raw);
                 }
             }
 
