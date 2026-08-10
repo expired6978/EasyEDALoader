@@ -1,6 +1,7 @@
 ﻿using PCB;
 
 using System;
+using System.Collections.Generic;
 
 namespace EasyEDA_Loader
 {
@@ -132,7 +133,24 @@ namespace EasyEDA_Loader
             return textObject;
         }
 
-        public static IPCB_ComponentBody CreateComponentBody(IPCB_LibComponent c, string fileName, double rx, double ry, double rz, double x, double y, double z)
+        public static IPCB_Region CreateSolidRegion(IPCB_LibComponent c, TLayerConstant layer, List<EePoint> points)
+        {
+            var contour = AltiumApi.GlobalVars.PCBServer.PCBContourFactory();
+            if (contour == null) return null;
+            foreach (var p in points)
+            {
+                contour.AddPoint(AltiumApi.MmToCoord(p.X) + c.GetState_XLocation(), AltiumApi.MmToCoord(p.Y) + c.GetState_YLocation());
+            }
+
+            var region = AltiumApi.GlobalVars.PCBServer.PCBObjectFactory(TObjectId.eRegionObject, TDimensionKind.eNoDimension, TObjectCreationMode.eCreate_Default) as IPCB_Region;
+            if (region == null) return null;
+            region.SetState_Kind(TRegionKind.eRegionKind_Copper);
+            region.SetOutlineContour(contour);
+            region.SetState_V7Layer(new V7_Layer(layer));
+            return region;
+        }
+
+        public static IPCB_ComponentBody CreateComponentBody(IPCB_LibComponent c, string fileName, double rx, double ry, double rz, double x, double y, double z, TLayerConstant layer)
         {
             var stepModel = AltiumApi.GlobalVars.PCBServer.PCBObjectFactory(TObjectId.eComponentBodyObject, TDimensionKind.eNoDimension, TObjectCreationMode.eCreate_Default) as IPCB_ComponentBody;
             if (stepModel == null) return null;
@@ -140,6 +158,11 @@ namespace EasyEDA_Loader
             if (model == null) return null;
             model.SetState(rx, ry, rz, AltiumApi.MmToCoord(z));
             stepModel.SetModel(model);
+            // Every other shape in this file (pads, tracks, arcs, text) sets its own layer via
+            // SetState_V7Layer - this call was missing entirely for component bodies, leaving a
+            // freshly-created body at whatever the internal default layer is instead of the side
+            // (top/bottom) the SVGNODE's own layerid actually specifies.
+            stepModel.SetState_V7Layer(new V7_Layer(layer));
             // Model is created at the bottom-left origin of the board, so we need to offset it
             stepModel.MoveByXY(AltiumApi.MmToCoord(x) + c.GetState_Board().GetState_XOrigin(), AltiumApi.MmToCoord(y) + c.GetState_Board().GetState_YOrigin());
             return stepModel;
