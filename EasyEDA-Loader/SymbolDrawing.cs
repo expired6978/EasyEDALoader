@@ -270,10 +270,10 @@ namespace EasyEDA_Loader
 
             List<(double x, double y)> offsets = new()
             {
-                (halfWidthMargin * gridSize, 0),
+                (halfWidthMargin * gridSize + gridSize, 0),
                 (0, halfHeightMargin * gridSize + gridSize),
                 (altiumRect.Width, halfHeightMargin * gridSize + gridSize),
-                (halfWidthMargin * gridSize, altiumRect.Height)
+                (halfWidthMargin * gridSize + gridSize, altiumRect.Height)
             };
 
             List<AltiumSymbolPin> pins = new();
