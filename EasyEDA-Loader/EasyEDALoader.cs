@@ -99,7 +99,13 @@ namespace EasyEDA_Loader
                     var root = selection.Root;
                     var owner_id = root.Component.Owner.Uuid;
                     var ee_footprint = root.Component.PackageDetail.Footprint;
+                    // The top-level Symbol (root.Component.Symbol) has an empty shape list for
+                    // multi-subpart components, but its Head.Parameters (Name/Pre) are still the
+                    // correct ones for the component as a whole - a subpart's own Pre has a
+                    // per-part suffix ("U?.1") that would be wrong here. Real per-part
+                    // pins/shapes come from Subparts instead.
                     var ee_symbol = root.Component.Symbol;
+                    bool isMultiPart = root.Component.Subparts != null && root.Component.Subparts.Count > 0;
                     string package = ee_footprint.Head.Parameters.Package;
                     EeFootprint3dModel model = selection.Include3dModel ? ee_footprint.GetModel() : null;
 
@@ -154,8 +160,22 @@ namespace EasyEDA_Loader
                         var component = EESCH.CreateComponent(partName, description, ee_symbol.Head.Parameters.Pre);
                         if (schLib != null && component != null)
                         {
+                            // Moved SetState_Current_SchComponent to before drawing, not after.
+                            // SetState_CurrentSchComponentPartId (used per-subpart below to draw
+                            // real multi-part components) needs the library's "current component"
+                            // context to already be this component while per-part IDs are being
+                            // set - otherwise every subpart's pins land in Part A regardless of
+                            // the part ID set.
+                            schLib.SetState_Current_SchComponent(component);
                             AltiumApi.GlobalVars.PCBServer.PreProcess();
-                            SymbolDrawing.CreateComponent(schLib, component, pcbLibraryPath, package, ee_symbol);
+                            if (isMultiPart)
+                            {
+                                SymbolDrawing.CreateMultiPartComponent(schLib, component, pcbLibraryPath, package, root.Component.Subparts);
+                            }
+                            else
+                            {
+                                SymbolDrawing.CreateComponent(schLib, component, pcbLibraryPath, package, ee_symbol);
+                            }
 
                             if (productInfo?.Parameters != null)
                             {
@@ -165,8 +185,21 @@ namespace EasyEDA_Loader
                                 }
                             }
 
+                            // Default Comment (shown as "*" until set). Comment isn't a plain
+                            // parameter you add - it's a dedicated, always-present object
+                            // retrieved via GetState_SchComment(), the same pattern already used
+                            // above for the designator (GetState_SchDesignator()). Adding a
+                            // separate parameter named "Comment" would create an unrelated extra
+                            // parameter and leave the real comment field at its "*" default.
+                            if (!string.IsNullOrEmpty(ee_symbol.Head.Parameters.ManufacturerPart))
+                            {
+                                var comment = component.GetState_SchComment();
+                                comment.SetState_Text(ee_symbol.Head.Parameters.ManufacturerPart);
+                                comment.SetState_ShowName(false);
+                                comment.SetState_IsHidden(false);
+                            }
+
                             AltiumApi.GlobalVars.PCBServer.PostProcess();
-                            schLib.SetState_Current_SchComponent(component);
                             schLib.GraphicallyInvalidate();
                             schDocument.DoFileSave("SchLib");
                         }
